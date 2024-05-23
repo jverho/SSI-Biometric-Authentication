@@ -2,6 +2,7 @@
 
 var crypto = require('crypto');
 var util = require('ethereumjs-util');
+const {web3} = require("hardhat");
 
 async function generateCredential(holderInfo, holderAccount, issuerAccount, issuerPrivateKey, epoch) {
 
