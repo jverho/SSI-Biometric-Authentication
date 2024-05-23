@@ -35,7 +35,9 @@ contract DID {
 
         uint256 aThreshold;                     // the minimum number of votes of delegates to replace the ownership
         uint256 uThreshold;                     // update threshold to help to recover identity 
-        mapping (string => bool) agreeState;    // voting results 
+        mapping (string => bool) agreeState;    // voting results
+
+        string additionalInfo;                  // New field to store additional information (random string)
 
         
     }
@@ -49,16 +51,17 @@ contract DID {
 
     /* DID DOCUMENT FUNCTIONS ----------------------------------------------------------------------------------------- */
 
-    function register(address _id, string memory _did) public {
-        require (registered[_id] == false, "the DID document already exists");
-        require (revoked[_id] == false, "the DID document has been revoked");
-        registered[_id] = true; 
-        identity[_id].id =  _id; 
-        identity[_id].owner = msg.sender; 
-        identity[_id].did = _did; 
-        identity[_id].delegated = false; 
+    function register(address _id, string memory _did, string memory _additionalInfo) public {
+        require(registered[_id] == false, "the DID document already exists");
+        require(revoked[_id] == false, "the DID document has been revoked");
+        registered[_id] = true;
+        identity[_id].id = _id;
+        identity[_id].owner = msg.sender;
+        identity[_id].did = _did;
         identity[_id].keyNo = 0;
-        identity[_id].endpointNo = 0; 
+        identity[_id].endpointNo = 0;
+        identity[_id].delegated = false;
+        identity[_id].additionalInfo = _additionalInfo; // Store the additional information
     }
 
 
