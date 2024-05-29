@@ -27,9 +27,15 @@ async function main() {
 	await identityReg.deployed();
 	console.log("DID Registry has been deployed to:", identityReg.address);
 
+	// Deploy Authentication contract
+	const Authentication = await ethers.getContractFactory('Authentication');
+	const authentication = await Authentication.deploy(identityReg.address);
+	await authentication.deployed();
+	console.log("Authentication contract has been deployed to:", authentication.address);
+
 	// Credential registry contract to deploy
 	const CredentialRegistry = await ethers.getContractFactory('Credentials');
-	const credentialReg = await CredentialRegistry.deploy();
+	const credentialReg = await CredentialRegistry.deploy(authentication.address);
 	await credentialReg.deployed();
 	console.log("Credentials Registry has been deployed to:", credentialReg.address);
 
@@ -45,6 +51,10 @@ async function main() {
 	await issuerReg.deployed();
 	console.log("Issuers Registry has been deployed to:", issuerReg.address);
 
+
+	// commented out to see if the proposed system needs these contracts
+/*
+
 	// // sub-accumulator
 	const SubAccumulator = await ethers.getContractFactory('SubAccumulator');
 	const subAcc = await SubAccumulator.deploy(issuerReg.address);
@@ -59,6 +69,10 @@ async function main() {
 	await globAcc.deployed();
 	console.log("Global accumulator has been deployed to:", globAcc.address);
 
+ */
+
+	//away for the moment testing registering of DID with authentication by
+	/*
 	const addresses = {
 		identityReg: identityReg.address,
 	};
@@ -66,6 +80,22 @@ async function main() {
 	const scriptDir = path.dirname(process.argv[1]);
 	const addressesFilePath = path.join(scriptDir, 'deployedAddresses.json');
 	fs.writeFileSync(addressesFilePath, JSON.stringify(addresses, null, 2));
+*/
+
+	// Register a DID
+	const accounts = await ethers.getSigners();
+	const userAddress = accounts[1].address;
+	const userDID = "did:example:123456";
+	const additionalInfo = "randomString"; // This should be generated or provided
+
+	const txRegister = await identityReg.connect(accounts[1]).register(userAddress, userDID, additionalInfo);
+	await txRegister.wait();
+	console.log(`DID ${userDID} has been registered for address ${userAddress}`);
+
+	// Authenticate
+	const isAuthenticated = await authentication.connect(accounts[1]).authenticate(userAddress, additionalInfo);
+	console.log(`Authentication result for ${userAddress}:`, isAuthenticated);
+
 }
 
 // We recommend this pattern to be able to use async/await everywhere

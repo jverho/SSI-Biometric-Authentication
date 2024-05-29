@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "./Authenticator.sol";
+
 contract Credentials {
+    Authentication private authentication;
+
+    constructor(address _authentication) {
+        authentication = Authentication(_authentication);
+    }
 
     struct Credential {             // verifiable claim 
         string id;              
@@ -36,5 +43,14 @@ contract Credentials {
     function getCredential(string memory _id) public view returns (string memory, string memory, string memory, string memory) {
         return (credential[_id].issuer, credential[_id].holder, credential[_id].credHash, credential[_id].signature); 
     }
+
+    // function does not work yet
+/*
+    function presentCredential(address _credId, string memory _submittedInfo) public view returns (string memory, string memory, string memory, string memory) {
+        require(authentication.authenticate(_credId, _submittedInfo), "User is not authenticated");
+        return getCredential(_credId);
+    }
+    */
+
 
 }

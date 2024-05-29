@@ -114,8 +114,12 @@ contract DID {
     
     /* DID DOCUMENT FUNCTIONS ----------------------------------------------------------------------------------------- */
 
-    function getInfo(address _id) public view returns(string memory, uint256, uint256) {
-        return (identity[_id].did, identity[_id].keyNo, identity[_id].endpointNo); 
+    function getInfo(address _id) public view returns(string memory) {
+        return  identity[_id].additionalInfo;
+    }
+
+    function getInfoOld(address _id) public view returns(string memory, uint256, uint256) {
+        return (identity[_id].did, identity[_id].keyNo, identity[_id].endpointNo);
     }
 
     function getDID(address _id) public view returns(string memory) {
