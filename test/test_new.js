@@ -137,8 +137,8 @@ describe("DID Registry", function() {
 
             await didRegistryInstance.register(holder, ubaasDID, additionalInfo);
             await didRegistryInstance.getInfo(holder).then((result) => {
-                console.log("DID:", result[0]);
-                assert.exists(result[0], "check if did was generated");
+                console.log("DID additional info:", result);
+                assert.exists(result, "check if did was generated");
             });
 
             registeredAdditionalInfo = additionalInfo;
@@ -154,6 +154,25 @@ describe("DID Registry", function() {
         it('Fail to authenticate user with invalid additional info', async () => {
             let isAuthenticated = await authenticatorInstance.authenticate(holder, "wrongInfo");
             assert.isFalse(isAuthenticated, "User should not be authenticated with invalid additional info");
+        });
+    });
+
+    describe("Present Credential", function() {
+        it('Present a valid credential for an authenticated user', async () => {
+
+            // Generate a credential
+            const holderInfo = "Some credential information"; // Adjust this to match your use case
+            const epoch = Math.floor(Date.now() / 1000); // Current epoch time
+            const issuerPrivateKey = web3.eth.accounts.create().privateKey; // Generate a private key for the issuer
+            const [credential, credentialHash, signature] = await generateCredential(holderInfo, holder, issuer, "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC", epoch);
+
+            // Add the credential to the registry
+            await credRegistryInstance.addCredential(credential.id, credential.issuer, credential.holder, credentialHash, signature, 3600, epoch);
+
+            const presentedCredential = await credRegistryInstance.presentCredential(credential.id, registeredAdditionalInfo, { from: holder });
+            console.log(presentedCredential);
+            assert.equal(presentedCredential[0], credential.issuer, "Presented credential should match the generated credential");
+
         });
     });
 
