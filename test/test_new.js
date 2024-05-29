@@ -21,6 +21,7 @@ const Admin = artifacts.require("AdminAccounts");
 const Issuer = artifacts.require("IssuerRegistry");
 const SubAcc = artifacts.require("SubAccumulator");
 const Acc = artifacts.require("Accumulator");
+const Auth = artifacts.require("Authentication");
 
 
 describe("DID Registry", function() {
@@ -41,6 +42,9 @@ describe("DID Registry", function() {
     let credRegistryInstance;
     let subAccInstance;
     let accInstance;
+    let authenticatorInstance;
+
+    let registeredAdditionalInfo;
 
     before(async function () {
         accounts = await web3.eth.getAccounts();
@@ -74,12 +78,20 @@ describe("DID Registry", function() {
             });
         });
 
+        it('Deploying the Authenticator contract', async () => {
+            authenticatorInstance = await Auth.new(didRegistryInstance.address);
+            await web3.eth.getBalance(authenticatorInstance.address).then((balance) => {
+                assert.equal(balance, 0, "check balance of the contract");
+            });
+        });
+
         it('Deploying the Credential Registry contract', async () => {
-            credRegistryInstance = await Cred.new();
+            credRegistryInstance = await Cred.new(authenticatorInstance.address);
             await web3.eth.getBalance(credRegistryInstance.address).then((balance) => {
                 assert.equal(balance, 0, "check balance of the contract");
             });
         });
+
 
         it('Deploying and generating bitmap', async () => {
             subAccInstance = await SubAcc.new(issuerRegistryInstance.address /*, accInstance.address*/);
@@ -117,13 +129,32 @@ describe("DID Registry", function() {
     describe("Identity Register", function () {
         it('Registering the identity with contract', async () => {
             let now = new Date();
-            let ubaasDID = web3.utils.sha3(issuer + now);
+            let method = "example"; // The DID method you are using
+            let uniqueIdentifier = web3.utils.sha3(issuer + Date.now()); // create a unique identifier
+            let ubaasDID = `did:${method}:${uniqueIdentifier}`; // put the DID together
+
             const additionalInfo = generateRandomString(16); // Adjust the length as needed
+
             await didRegistryInstance.register(holder, ubaasDID, additionalInfo);
             await didRegistryInstance.getInfo(holder).then((result) => {
-                console.log(result[0]);
+                console.log("DID:", result[0]);
                 assert.exists(result[0], "check if did was generated");
             });
+
+            registeredAdditionalInfo = additionalInfo;
         });
     });
+
+    describe("Authentication", function () {
+        it('Authenticate user with valid additional info', async () => {
+            let isAuthenticated = await authenticatorInstance.authenticate(holder, registeredAdditionalInfo);
+            assert.isTrue(isAuthenticated, "User should be authenticated with valid additional info");
+        });
+
+        it('Fail to authenticate user with invalid additional info', async () => {
+            let isAuthenticated = await authenticatorInstance.authenticate(holder, "wrongInfo");
+            assert.isFalse(isAuthenticated, "User should not be authenticated with invalid additional info");
+        });
+    });
+
 });
