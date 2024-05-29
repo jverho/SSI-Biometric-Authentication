@@ -51,10 +51,6 @@ async function main() {
 	await issuerReg.deployed();
 	console.log("Issuers Registry has been deployed to:", issuerReg.address);
 
-
-	// commented out to see if the proposed system needs these contracts
-/*
-
 	// // sub-accumulator
 	const SubAccumulator = await ethers.getContractFactory('SubAccumulator');
 	const subAcc = await SubAccumulator.deploy(issuerReg.address);
@@ -69,7 +65,6 @@ async function main() {
 	await globAcc.deployed();
 	console.log("Global accumulator has been deployed to:", globAcc.address);
 
- */
 
 	//away for the moment testing registering of DID with authentication by
 	/*

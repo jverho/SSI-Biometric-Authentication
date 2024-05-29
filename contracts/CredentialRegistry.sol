@@ -41,16 +41,14 @@ contract Credentials {
     }
 
     function getCredential(string memory _id) public view returns (string memory, string memory, string memory, string memory) {
-        return (credential[_id].issuer, credential[_id].holder, credential[_id].credHash, credential[_id].signature); 
+        return (credential[_id].issuer, credential[_id].holder, credential[_id].credHash, credential[_id].signature);
     }
 
-    // function does not work yet
-/*
-    function presentCredential(address _credId, string memory _submittedInfo) public view returns (string memory, string memory, string memory, string memory) {
-        require(authentication.authenticate(_credId, _submittedInfo), "User is not authenticated");
+
+    function presentCredential(string memory _credId, string memory _submittedInfo) public view returns (string memory, string memory, string memory, string memory) {
+        require(authentication.authenticate(msg.sender, _submittedInfo), "User is not authenticated");
         return getCredential(_credId);
     }
-    */
 
 
 }
