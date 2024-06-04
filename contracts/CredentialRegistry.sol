@@ -50,5 +50,10 @@ contract Credentials {
         return getCredential(_credId);
     }
 
+    function presentCredentialSeperated(string memory _credId, string memory _submittedInfo, string memory _localInfo) public view returns (string memory, string memory, string memory, string memory) {
+        require(authentication.authenticateSeperated(msg.sender, _submittedInfo, _localInfo), "User is not authenticated");
+        return getCredential(_credId);
+    }
+
 
 }
