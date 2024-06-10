@@ -66,8 +66,7 @@ async function main() {
 	console.log("Global accumulator has been deployed to:", globAcc.address);
 
 
-	//away for the moment testing registering of DID with authentication by
-	/*
+
 	const addresses = {
 		identityReg: identityReg.address,
 	};
@@ -75,8 +74,8 @@ async function main() {
 	const scriptDir = path.dirname(process.argv[1]);
 	const addressesFilePath = path.join(scriptDir, 'deployedAddresses.json');
 	fs.writeFileSync(addressesFilePath, JSON.stringify(addresses, null, 2));
-*/
 
+/*
 	// Register a DID
 	const accounts = await ethers.getSigners();
 	const userAddress = accounts[1].address;
@@ -90,6 +89,8 @@ async function main() {
 	// Authenticate
 	const isAuthenticated = await authentication.connect(accounts[1]).authenticate(userAddress, additionalInfo);
 	console.log(`Authentication result for ${userAddress}:`, isAuthenticated);
+
+ */
 
 }
 

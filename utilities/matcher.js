@@ -34,7 +34,7 @@ function matchFingerprints(stored, newFingerprint, threshold = 5) {
         }
     }
 
-    // Define a simple threshold for a match (e.g., 70% of points should match)
+    // Define a threshold for a match (e.g., 70% of points should match)
     const matchThreshold = 0.7 * stored.minutiae_points.length;
     return matches >= matchThreshold;
 }

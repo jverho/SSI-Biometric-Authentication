@@ -45,7 +45,6 @@ describe("DID Registry", function() {
     let authenticatorInstance;
 
     let additionalInfo;
-    let encryptedInfo;
     let registeredAdditionalInfo;
     let localAdditionalInfo;
 
@@ -136,15 +135,10 @@ describe("DID Registry", function() {
             let uniqueIdentifier = web3.utils.sha3(issuer + Date.now()); // create a unique identifier
             let ubaasDID = `did:${method}:${uniqueIdentifier}`; // put the DID together
 
-            const secretKey = crypto.randomBytes(32); // 256-bit key
-
             additionalInfo = generateRandomString(16);
-
-            encryptedInfo = encrypt(additionalInfo, secretKey);
-            console.log("Additional info:", additionalInfo);
-            console.log("Encrypted info:", encryptedInfo);
-            registeredAdditionalInfo =  encryptedInfo.substring((encryptedInfo.length/2)); //changed to encrypted
-            localAdditionalInfo = encryptedInfo.substring(0, (encryptedInfo.length/2)); //changed to encrypted
+            console.log("Complete info:", additionalInfo);
+            registeredAdditionalInfo =  additionalInfo.substring((additionalInfo.length/2));
+            localAdditionalInfo = additionalInfo.substring(0, (additionalInfo.length/2));
 
             await didRegistryInstance.register(holder, ubaasDID, registeredAdditionalInfo);
             await didRegistryInstance.getInfo(holder).then((result) => {
@@ -157,18 +151,18 @@ describe("DID Registry", function() {
 
     describe("Authentication", function () {
         it('Authenticate user with valid additional info', async () => {
-            let isAuthenticated = await authenticatorInstance.authenticateSeperated(holder, encryptedInfo, localAdditionalInfo);
+            let isAuthenticated = await authenticatorInstance.authenticateSeparated(holder, additionalInfo, localAdditionalInfo);
             assert.isTrue(isAuthenticated, "User should be authenticated with valid additional info");
         });
 
         it('Fail to authenticate user with invalid additional info', async () => {
-            let isAuthenticated = await authenticatorInstance.authenticateSeperated(holder, "wrongInfo", localAdditionalInfo);
+            let isAuthenticated = await authenticatorInstance.authenticateSeparated(holder, "wrongInfo", localAdditionalInfo);
             assert.isFalse(isAuthenticated, "User should not be authenticated with invalid additional info");
         });
     });
 
     describe("Present Credential", function() {
-        it('Present a valid credential for an authenticated user, seperated Info', async () => {
+        it('Present a valid credential for an authenticated user, separated Info', async () => {
 
             // Generate a credential
             const holderInfo = "Some credential information"; // Adjust this to match your use case
@@ -179,8 +173,7 @@ describe("DID Registry", function() {
             // Add the credential to the registry
             await credRegistryInstance.addCredential(credential.id, credential.issuer, credential.holder, credentialHash, signature, 3600, epoch);
 
-            // users submit information in order to authenticate themselves and be able to present the credential
-            const presentedCredential = await credRegistryInstance.presentCredentialSeperated(credential.id, encryptedInfo, localAdditionalInfo, { from: holder });
+            const presentedCredential = await credRegistryInstance.presentCredentialSeparated(credential.id, additionalInfo, localAdditionalInfo, { from: holder });
             console.log(presentedCredential);
             assert.equal(presentedCredential[0], credential.issuer, "Presented credential should match the generated credential");
 
