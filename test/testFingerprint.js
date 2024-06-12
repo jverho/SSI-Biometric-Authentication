@@ -96,7 +96,7 @@ describe("DID Registry", function() {
         });
 
         it('Deploying the Credential Registry contract', async () => {
-            credRegistryInstance = await Cred.new(authenticatorInstance.address);
+            credRegistryInstance = await Cred.new(authenticatorInstance.address, didRegistryInstance.address);
             await web3.eth.getBalance(credRegistryInstance.address).then((balance) => {
                 assert.equal(balance, 0, "check balance of the contract");
             });
@@ -163,76 +163,86 @@ describe("DID Registry", function() {
         });
     });
 
-    describe("Authentication", function () {
-        it('Authenticate user with second biometric', async () => {
-            // simulated authenticator
+    describe("Match fingerprints", function () {
+        it('Matching fingerprints', async () => {
+
+            // select matching fingerprint
             const fingerprint2Path = path.join(__dirname, '..', 'biometrics', 'fingerprint2.json');
             fingerprintAuthentication = JSON.parse(fs.readFileSync(fingerprint2Path));
 
+            // concatenate the encrypted seperated fingerprint and decrypt it
+            // do I need to get the registeredAdditionalInfo from the DID to simulate it more realistically?
             const decryptedInfo = decrypt(localAdditionalInfo+registeredAdditionalInfo, secretKey);
             console.log("decrypted info:", decryptedInfo);
             let fingerprintConcatenated = JSON.parse(decryptedInfo);
+
+            // check that the fingerprint matches
             let authenticationResult = matchFingerprints(fingerprintConcatenated, fingerprintAuthentication)
             assert.isTrue(authenticationResult, "User should be authenticated with valid biometric");
         });
 
-        it('Fail to authenticate with non matching biometric', async () => {
+        it('Not matching fingerprints', async () => {
+
+            // select the fingerprint that does not match
             const fingerprint3Path = path.join(__dirname, '..', 'biometrics', 'fingerprint3.json');
             const fingerprintNonMatch = JSON.parse(fs.readFileSync(fingerprint3Path));
 
+            // concatenate the encrypted seperated fingerprint and decrypt it
+            // do I need to het the registeredAdditionalInfo from the DID to simulate it more realistically?
             const decryptedInfo = decrypt(localAdditionalInfo+registeredAdditionalInfo, secretKey);
             let fingerprintConcatenated = JSON.parse(decryptedInfo);
 
+            // check that the fingerprint does NOT match
             let authenticationResult = matchFingerprints(fingerprintConcatenated, fingerprintNonMatch);
             assert.isFalse(authenticationResult, "User should not be authenticated with invalid biometric");
         });
-
-
     });
-/*
-    describe("Present Credential", function() {
-        it('Present a valid credential for an authenticated user, seperated Info', async () => {
 
-            // Generate a credential
-            const holderInfo = "Some credential information"; // Adjust this to match your use case
-            const epoch = Math.floor(Date.now() / 1000); // Current epoch time
-            const issuerPrivateKey = web3.eth.accounts.create().privateKey; // Generate a private key for the issuer
-            const [credential, credentialHash, signature] = await generateCredential(holderInfo, holder, issuer, "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC", epoch);
+    /*
+        describe("Present Credential", function() {
+            it('Present a valid credential for an authenticated user, seperated Info', async () => {
 
-            // Add the credential to the registry
-            await credRegistryInstance.addCredential(credential.id, credential.issuer, credential.holder, credentialHash, signature, 3600, epoch);
+                // Generate a credential
+                const holderInfo = "Some credential information"; // Adjust this to match your use case
+                const epoch = Math.floor(Date.now() / 1000); // Current epoch time
+                const issuerPrivateKey = web3.eth.accounts.create().privateKey; // Generate a private key for the issuer
+                const [credential, credentialHash, signature] = await generateCredential(holderInfo, holder, issuer, "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC", epoch);
 
-            // do the authentication on device
-            // simulated authenticator
-            const fingerprint2Path = path.join(__dirname, '..', 'biometrics', 'fingerprint2.json');
-            fingerprintAuthentication = JSON.parse(fs.readFileSync(fingerprint2Path));
+                // Add the credential to the registry
+                await credRegistryInstance.addCredential(credential.id, credential.issuer, credential.holder, credentialHash, signature, 3600, epoch);
 
-            const decryptedInfo = decrypt(localAdditionalInfo+registeredAdditionalInfo, secretKey);
-            console.log("decrypted info:", decryptedInfo);
-            let fingerprintConcatenated = JSON.parse(decryptedInfo);
-            let authenticationResult = matchFingerprints(fingerprintConcatenated, fingerprintAuthentication)
-            assert.isTrue(authenticationResult, "User should be authenticated with valid biometric")
+                // do the authentication on device
+                // simulated authenticator
+                const fingerprint2Path = path.join(__dirname, '..', 'biometrics', 'fingerprint2.json');
+                fingerprintAuthentication = JSON.parse(fs.readFileSync(fingerprint2Path));
 
-            // then call authenticator and add give signature of authenticator
+                const decryptedInfo = decrypt(localAdditionalInfo+registeredAdditionalInfo, secretKey);
+                console.log("decrypted info:", decryptedInfo);
+                let fingerprintConcatenated = JSON.parse(decryptedInfo);
+                let authenticationResult = matchFingerprints(fingerprintConcatenated, fingerprintAuthentication)
+                assert.isTrue(authenticationResult, "User should be authenticated with valid biometric")
 
-            // Create a new account for the authenticator
-            const authenticatorAccount = web3.eth.accounts.create();
-            console.log("Authenticator Account:", authenticatorAccount);
-            const dataToSign = web3.utils.sha3('some data to sign');
+                // then call authenticator and add give signature of authenticator
 
-            // Sign the data
-            const authenticatorSignature = web3.eth.accounts.sign(dataToSign, authenticatorAccount.privateKey);
-            console.log("Signature:", authenticatorSignature);
+                // Create a new account for the authenticator
+                const authenticatorAccount = web3.eth.accounts.create();
+                console.log("Authenticator Account:", authenticatorAccount);
+                const dataToSign = web3.utils.sha3('some data to sign');
+
+                // Sign the data
+                const authenticatorSignature = web3.eth.accounts.sign(dataToSign, authenticatorAccount.privateKey);
+                console.log("Signature:", authenticatorSignature);
 
 
-            // call presentCredential, compares the signature to public key of authenticator?
-            const presentedCredential = await credRegistryInstance.presentCredentialWithSignature(credential.id, dataToSign, authenticatorSignature, authenticatorAccount.publicKey);
-            console.log(presentedCredential);
-            assert.equal(presentedCredential[0], credential.issuer, "Presented credential should match the generated credential");
+                // call presentCredential, compares the signature to public key of authenticator?
 
+                const presentedCredential = await credRegistryInstance.presentCredentialWithSignature(credential.id, dataToSign, authenticatorSignature, authenticatorAccount.publicKey);
+                console.log(presentedCredential);
+                assert.equal(presentedCredential[0], credential.issuer, "Presented credential should match the generated credential");
+
+
+            });
         });
-    });
-
- */
+    */
 
 });

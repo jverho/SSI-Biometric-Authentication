@@ -2,12 +2,19 @@
 pragma solidity ^0.8.0;
 
 import "./Authenticator.sol";
+import "./DIDRegistry.sol";
 
 contract Credentials {
     Authentication private authentication;
+    DID private didRegistry;
 
-    constructor(address _authentication) {
+    event CredentialIssued(address indexed user, string issuer, string holder, string credHash, string signature);
+    event AuthenticationRequest(address indexed user, string _credId, string submittedInfo, string storedInfo);
+
+
+    constructor(address _authentication, address _didRegistry) {
         authentication = Authentication(_authentication);
+        didRegistry = DID(_didRegistry);
     }
 
     struct Credential {             // verifiable claim 
@@ -53,6 +60,21 @@ contract Credentials {
     function presentCredentialSeparated(string memory _credId, string memory _submittedInfo, string memory _localInfo) public view returns (string memory, string memory, string memory, string memory) {
         require(authentication.authenticateSeparated(msg.sender, _submittedInfo, _localInfo), "User is not authenticated");
         return getCredential(_credId);
+    }
+
+    function requestCredential(address _id, string memory _credId, string memory _submittedInfo) public {
+        string memory storedAdditionalInfo = didRegistry.getInfo(msg.sender);
+        emit AuthenticationRequest(_id, _credId, _submittedInfo, storedAdditionalInfo);
+    }
+
+    function handleAuthenticationResult(address _id, string memory _credId, bool _result) public {
+        // maybe add later for security
+        //require(msg.sender == address(this), "Unauthorized");
+
+        if (_result) {
+            // Logic to return the credential to the user
+            emit CredentialIssued(_id, credential[_credId].issuer , credential[_credId].holder, credential[_credId].credHash, credential[_credId].signature);
+        }
     }
 
 

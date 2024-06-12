@@ -89,7 +89,7 @@ describe("DID Registry", function() {
         });
 
         it('Deploying the Credential Registry contract', async () => {
-            credRegistryInstance = await Cred.new(authenticatorInstance.address);
+            credRegistryInstance = await Cred.new(authenticatorInstance.address, didRegistryInstance.address);
             await web3.eth.getBalance(credRegistryInstance.address).then((balance) => {
                 assert.equal(balance, 0, "check balance of the contract");
             });
@@ -174,10 +174,18 @@ describe("DID Registry", function() {
             const holderInfo = "Some credential information"; // Adjust this to match your use case
             const epoch = Math.floor(Date.now() / 1000); // Current epoch time
             const issuerPrivateKey = web3.eth.accounts.create().privateKey; // Generate a private key for the issuer
-            const [credential, credentialHash, signature] = await generateCredential(holderInfo, holder, issuer, "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC", epoch);
+            const [credential, credentialHash, signature] = await generateCredential(holderInfo, holder, issuer, "59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d", epoch);
+
+            console.log("credential:", credential);
+            console.log("credentialHash:", credentialHash)
+            console.log("signature:", signature);
 
             // Add the credential to the registry
             await credRegistryInstance.addCredential(credential.id, credential.issuer, credential.holder, credentialHash, signature, 3600, epoch);
+
+            console.log("credential:", credential);
+            console.log("credentialHash:", credentialHash)
+            console.log("signature:", signature);
 
             // users submit information in order to authenticate themselves and be able to present the credential
             const presentedCredential = await credRegistryInstance.presentCredentialSeparated(credential.id, encryptedInfo, localAdditionalInfo, { from: holder });

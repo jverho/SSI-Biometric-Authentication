@@ -1,4 +1,3 @@
-
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
@@ -16,7 +15,7 @@ contract Authentication {
         return keccak256(abi.encodePacked(storedAdditionalInfo)) == keccak256(abi.encodePacked(_submittedInfo));
     }
 
-    function authenticateSeperated(address _id, string memory _submittedInfo, string memory _localInfo) public view returns (bool) {
+    function authenticateSeparated(address _id, string memory _submittedInfo, string memory _localInfo) public view returns (bool) {
         string  memory storedAdditionalInfo = didRegistry.getInfo(_id);
         string  memory wholeInfo = string(abi.encodePacked(_localInfo, storedAdditionalInfo));
         return keccak256(abi.encodePacked(wholeInfo)) == keccak256(abi.encodePacked(_submittedInfo));

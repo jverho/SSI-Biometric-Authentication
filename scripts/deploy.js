@@ -35,7 +35,7 @@ async function main() {
 
 	// Credential registry contract to deploy
 	const CredentialRegistry = await ethers.getContractFactory('Credentials');
-	const credentialReg = await CredentialRegistry.deploy(authentication.address);
+	const credentialReg = await CredentialRegistry.deploy(authentication.address, identityReg.address);
 	await credentialReg.deployed();
 	console.log("Credentials Registry has been deployed to:", credentialReg.address);
 
@@ -69,6 +69,8 @@ async function main() {
 
 	const addresses = {
 		identityReg: identityReg.address,
+		authentication: authentication.address,
+		credentialReg: credentialReg.address,
 	};
 
 	const scriptDir = path.dirname(process.argv[1]);
