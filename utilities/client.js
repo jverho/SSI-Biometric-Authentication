@@ -17,11 +17,13 @@ async function listenForCredentials(userAddress) {
         }
 
         const { user, issuer, holder, credHash, signature } = event.returnValues;
+        let sig = JSON.parse(signature);
         console.log(`Credential for ${user}:`);
         console.log(`Issuer: ${issuer}`);
         console.log(`Holder: ${holder}`);
         console.log(`Credential Hash: ${credHash}`);
-        console.log(`Signature: ${signature}`);
+        console.log(`Signature as object: ${JSON.stringify(sig)}`);
+        // here credential could be saved to a JSON file and used in another file to verify the credential
     });
     console.log("Client Receiver started and listening...");
 }

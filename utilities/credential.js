@@ -23,8 +23,9 @@ async function generateCredential(holderInfo, holderAccount, issuerAccount, issu
     // the previous did not work, replaced with using web3 utilities sha and sign 
     let credentialHash = web3.utils.sha3(JSON.stringify(credential));
     let sig = await web3.eth.accounts.sign(credentialHash, '0x' + issuerPrivateKey);
+    let signature = JSON.stringify(sig);
 
-    return [ credential, credentialHash, sig ];
+    return [ credential, credentialHash, signature ];
 }
 
 
