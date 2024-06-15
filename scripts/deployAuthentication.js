@@ -1,7 +1,8 @@
 const { ethers } = require("hardhat");
 const fs = require('fs');
 const path = require("path");
-const { generateCredential } = require('../utilities/credential'); // Import the utility functions
+const { generateCredential } = require('../utilities/credential');
+const { generateSymmetricKey, encrypt } = require('../utilities/encryption');
 
 async function main() {
     // Use the second account (Account #1) for this operation
@@ -29,11 +30,15 @@ async function main() {
     const fingerprint1Path = path.join(__dirname, '..', 'biometrics', 'fingerprint1.json');
     const fingerprintRegistration = JSON.stringify(JSON.parse(fs.readFileSync(fingerprint1Path)));
 
+    //Encrypt the fingerprint
+    const secretKey = generateSymmetricKey();
+    const fingerprintEncrypted = encrypt(fingerprintRegistration, secretKey);
+
     // Register the DID
-    const tx = await identityReg.connect(user).register(userAddress, yourDID, fingerprintRegistration);
+    const tx = await identityReg.connect(user).register(userAddress, yourDID, fingerprintEncrypted);
     await tx.wait(); // Wait for the transaction to be mined
 
-    console.log("DID", yourDID, "has been registered for address", userAddress, "with the fingerprint", fingerprintRegistration);
+    console.log("DID", yourDID, "has been registered for address", userAddress, "with the fingerprint", fingerprintEncrypted);
 
     const credentialRegAddress = addresses.credentialReg;
     const CredentialRegistry = await ethers.getContractFactory('Credentials');
@@ -64,7 +69,7 @@ async function main() {
 
 
     // Send the request authentication transaction
-    const txRequestAuth = await credentialReg.connect(user).requestCredential(userAddress, credential.id, fingerprintRegistration);
+    const txRequestAuth = await credentialReg.connect(user).requestCredential(userAddress, credential.id, fingerprintRegistration, fingerprintEncrypted, secretKey);
     await txRequestAuth.wait();
     //console.log(`Authentication requested for user: ${userAddress} with info: ${fingerprintRegistration}`);
 }

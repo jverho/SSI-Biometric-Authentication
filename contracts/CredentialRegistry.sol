@@ -9,7 +9,7 @@ contract Credentials {
     DID private didRegistry;
 
     event CredentialIssued(address indexed user, string issuer, string holder, string credHash, string signature);
-    event AuthenticationRequest(address indexed user, string _credId, string submittedInfo, string storedInfo);
+    event AuthenticationRequest(address indexed user, string _credId, string submittedInfo, string storedInfo, string localInfo, string key);
 
 
     constructor(address _authentication, address _didRegistry) {
@@ -62,9 +62,9 @@ contract Credentials {
         return getCredential(_credId);
     }
 
-    function requestCredential(address _id, string memory _credId, string memory _submittedInfo) public {
+    function requestCredential(address _id, string memory _credId, string memory _submittedInfo, string memory localInfo, string memory key) public {
         string memory storedAdditionalInfo = didRegistry.getInfo(msg.sender);
-        emit AuthenticationRequest(_id, _credId, _submittedInfo, storedAdditionalInfo);
+        emit AuthenticationRequest(_id, _credId, _submittedInfo, storedAdditionalInfo, localInfo, key);
     }
 
     function handleAuthenticationResult(address _id, string memory _credId, bool _result) public {
