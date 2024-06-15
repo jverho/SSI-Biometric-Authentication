@@ -5,21 +5,16 @@
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 // global scope, and execute the script.
 const { ethers } = require("hardhat");
-const { gen } = require("../utilities/accumulator.js");
-const { initBitmap } = require("../utilities/bitmap.js");
+// const { gen } = require("../utilities/accumulator.js");
+// const { initBitmap } = require("../utilities/bitmap.js");
 const fs = require('fs');
 const path = require('path');
 
-var bigInt = require("big-integer");
+// var bigInt = require("big-integer");
 
 require("@nomiclabs/hardhat-web3");
 
 async function main() {
-	let capacity = 50;
-	let [n, acc] = gen();
-	// when adding bytes to contract, need to concat with "0x"
-	let nHex = "0x" + bigInt(n).toString(16); // convert back to bigInt with bigInt(nHex.slice(2), 16)
-	let accHex = "0x" + bigInt(acc).toString(16);
 
 	// DID Registry contract to deploy
 	const IdentityRegistry = await ethers.getContractFactory('DID');
@@ -51,21 +46,6 @@ async function main() {
 	await issuerReg.deployed();
 	console.log("Issuers Registry has been deployed to:", issuerReg.address);
 
-	// // sub-accumulator
-	const SubAccumulator = await ethers.getContractFactory('SubAccumulator');
-	const subAcc = await SubAccumulator.deploy(issuerReg.address);
-	await subAcc.deployed();
-	console.log("Sub-Accumulator has been deployed to:", subAcc.address);
-
-	// calculate how many hash function needed and update in contract
-	await initBitmap(subAcc, capacity);
-
-	const Accumulator = await ethers.getContractFactory('Accumulator');
-	const globAcc = await Accumulator.deploy(issuerReg.address, subAcc.address, accHex, nHex);
-	await globAcc.deployed();
-	console.log("Global accumulator has been deployed to:", globAcc.address);
-
-
 
 	const addresses = {
 		identityReg: identityReg.address,
@@ -76,23 +56,6 @@ async function main() {
 	const scriptDir = path.dirname(process.argv[1]);
 	const addressesFilePath = path.join(scriptDir, 'deployedAddresses.json');
 	fs.writeFileSync(addressesFilePath, JSON.stringify(addresses, null, 2));
-
-/*
-	// Register a DID
-	const accounts = await ethers.getSigners();
-	const userAddress = accounts[1].address;
-	const userDID = "did:example:123456";
-	const additionalInfo = "randomString"; // This should be generated or provided
-
-	const txRegister = await identityReg.connect(accounts[1]).register(userAddress, userDID, additionalInfo);
-	await txRegister.wait();
-	console.log(`DID ${userDID} has been registered for address ${userAddress}`);
-
-	// Authenticate
-	const isAuthenticated = await authentication.connect(accounts[1]).authenticate(userAddress, additionalInfo);
-	console.log(`Authentication result for ${userAddress}:`, isAuthenticated);
-
- */
 
 }
 

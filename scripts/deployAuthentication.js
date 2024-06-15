@@ -5,13 +5,12 @@ const { generateCredential } = require('../utilities/credential');
 const { generateSymmetricKey, encrypt, splitString } = require('../utilities/encryption');
 
 async function main() {
-    // Use the second account (Account #1) for this operation
     const accounts = await ethers.getSigners();
     const user = accounts[1];
     const userAddress = accounts[1].address;
     const issuer = accounts[0]; // Use the first account as the issuer
     const issuerAddress = accounts[0].address;
-    const issuerPrivateKey = '59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d'; // Replace with the actual private key
+    const issuerPrivateKey = '59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d'; // Example Private key
 
 
     const addressesFilePath = path.join(__dirname, 'deployedAddresses.json');
@@ -68,11 +67,14 @@ async function main() {
 
     console.log(`Credential added for user: ${userAddress}`);
 
+    // Second fingerprint for authentication
+    const fingerprint2Path = path.join(__dirname, '..', 'biometrics', 'fingerprint2.json');
+    const fingerprintAuthentication = JSON.stringify(JSON.parse(fs.readFileSync(fingerprint2Path)));
 
     // Send the request authentication transaction
-    const txRequestAuth = await credentialReg.connect(user).requestCredential(userAddress, credential.id, fingerprintRegistration, localFingerprintEncrypted, secretKey);
+    const txRequestAuth = await credentialReg.connect(user).requestCredential(userAddress, credential.id, fingerprintAuthentication, localFingerprintEncrypted, secretKey);
     await txRequestAuth.wait();
-    //console.log(`Authentication requested for user: ${userAddress} with info: ${fingerprintRegistration}`);
+    console.log('Authentication requested for user:', userAddress);
 }
 
 main().catch((error) => {
