@@ -31,9 +31,19 @@ function decrypt(data, secretKey) {
     return decrypted.toString();
 }
 
+// Function to split a string into two parts
+function splitString(str) {
+    const midpoint = Math.ceil(str.length / 2);
+    const part1 = str.substring(0, midpoint);
+    const part2 = str.substring(midpoint);
+    return [part1, part2];
+}
+
+
 module.exports = {
     generateRandomString,
     generateSymmetricKey,
     encrypt,
-    decrypt
+    decrypt,
+    splitString,
 };

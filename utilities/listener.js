@@ -22,19 +22,13 @@ async function startListener() {
 
             const { user, _credId, submittedInfo, storedInfo, localInfo, key } = event.returnValues;
 
-            console.log("user:", user);
-            console.log("_credId:", _credId);
-            console.log("SubmittedInfo:", submittedInfo);
-            console.log("Stored Info:", storedInfo);
-            console.log("local Info:", localInfo);
-            console.log("key:", key);
+            const combinedInfo = localInfo+storedInfo;
 
-            const decryptedStoredInfo = decrypt(storedInfo, key);
-            const decryptedLocalInfo = decrypt(localInfo, key);
+            const decryptedCombinedInfo = decrypt(combinedInfo, key);
 
             // Parse the JSON strings into JavaScript objects
             const submittedFingerprint = JSON.parse(submittedInfo);
-            const storedFingerprint = JSON.parse(decryptedStoredInfo);
+            const storedFingerprint = JSON.parse(decryptedCombinedInfo);
 
             // Perform the matching off-chain
             const success = matchFingerprints(storedFingerprint, submittedFingerprint);

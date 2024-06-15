@@ -2,7 +2,7 @@ const { ethers } = require("hardhat");
 const fs = require('fs');
 const path = require("path");
 const { generateCredential } = require('../utilities/credential');
-const { generateSymmetricKey, encrypt } = require('../utilities/encryption');
+const { generateSymmetricKey, encrypt, splitString } = require('../utilities/encryption');
 
 async function main() {
     // Use the second account (Account #1) for this operation
@@ -33,12 +33,13 @@ async function main() {
     //Encrypt the fingerprint
     const secretKey = generateSymmetricKey();
     const fingerprintEncrypted = encrypt(fingerprintRegistration, secretKey);
+    const [localFingerprintEncrypted, submittedFingerprintEncrypted] = splitString(fingerprintEncrypted);
 
     // Register the DID
-    const tx = await identityReg.connect(user).register(userAddress, yourDID, fingerprintEncrypted);
+    const tx = await identityReg.connect(user).register(userAddress, yourDID, submittedFingerprintEncrypted);
     await tx.wait(); // Wait for the transaction to be mined
 
-    console.log("DID", yourDID, "has been registered for address", userAddress, "with the fingerprint", fingerprintEncrypted);
+    console.log("DID", yourDID, "has been registered for address", userAddress, "with the fingerprint", submittedFingerprintEncrypted);
 
     const credentialRegAddress = addresses.credentialReg;
     const CredentialRegistry = await ethers.getContractFactory('Credentials');
@@ -69,7 +70,7 @@ async function main() {
 
 
     // Send the request authentication transaction
-    const txRequestAuth = await credentialReg.connect(user).requestCredential(userAddress, credential.id, fingerprintRegistration, fingerprintEncrypted, secretKey);
+    const txRequestAuth = await credentialReg.connect(user).requestCredential(userAddress, credential.id, fingerprintRegistration, localFingerprintEncrypted, secretKey);
     await txRequestAuth.wait();
     //console.log(`Authentication requested for user: ${userAddress} with info: ${fingerprintRegistration}`);
 }
