@@ -1,4 +1,5 @@
 const { ethers } = require("hardhat");
+const { web3 } = require("hardhat");
 const fs = require('fs');
 const path = require("path");
 const { generateCredential } = require('../utilities/credential');
@@ -8,10 +9,22 @@ async function main() {
     const accounts = await ethers.getSigners();
     const user = accounts[1];
     const userAddress = accounts[1].address;
-    const issuer = accounts[0]; // Use the first account as the issuer
-    const issuerAddress = accounts[0].address;
-    const issuerPrivateKey = '59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d'; // Example Private key
 
+    // Create a new account for the issuer using web3
+    const web3Issuer = web3.eth.accounts.create();
+    const issuerPrivateKey = web3Issuer.privateKey;
+    const issuerAddress = web3Issuer.address;
+
+    // Create an ethers signer from the private key
+    const issuer = new ethers.Wallet(issuerPrivateKey, ethers.provider);
+
+    // Fund the issuer account from a pre-funded account
+    const funder = accounts[0];
+    const fund = await funder.sendTransaction({
+        to: issuerAddress,
+        value: ethers.utils.parseEther("1.0") // Send 1 ETH
+    });
+    await fund.wait();
 
     const addressesFilePath = path.join(__dirname, 'deployedAddresses.json');
     const addresses = JSON.parse(fs.readFileSync(addressesFilePath, 'utf8'));
@@ -38,7 +51,7 @@ async function main() {
     const tx = await identityReg.connect(user).register(userAddress, yourDID, submittedFingerprintEncrypted);
     await tx.wait(); // Wait for the transaction to be mined
 
-    console.log("DID", yourDID, "has been registered for address", userAddress, "with the fingerprint", submittedFingerprintEncrypted);
+    console.log("DID", yourDID, "has been registered for address", userAddress);
 
     const credentialRegAddress = addresses.credentialReg;
     const CredentialRegistry = await ethers.getContractFactory('Credentials');

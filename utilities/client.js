@@ -4,6 +4,7 @@ const web3 = new Web3('ws://127.0.0.1:8545'); // Use the same WebSocket provider
 const contractABI = require('../artifacts/contracts/CredentialRegistry.sol/Credentials.json').abi;
 const contractAddress = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0'; // Replace with actual deployed address
 const Credentials = new web3.eth.Contract(contractABI, contractAddress);
+const { verifySignature } = require('./credential');
 
 async function listenForCredentials(userAddress) {
     // Listen for the credential issuance event
@@ -22,10 +23,13 @@ async function listenForCredentials(userAddress) {
         console.log(`Issuer: ${issuer}`);
         console.log(`Holder: ${holder}`);
         console.log(`Credential Hash: ${credHash}`);
-        console.log(`Signature as object: ${JSON.stringify(sig)}`);
+        console.log(`Signature: ${JSON.stringify(sig)}`);
+        console.log(`Signature: ${typeof sig.signature}`);
         // here credential could be saved to a JSON file and used in another file to verify the credential
+
+        verifySignature(credHash, sig.signature, issuer);
     });
-    console.log("Client Receiver started and listening...");
+    console.log("Client Receiver started and waiting for events...");
 }
 // at the moment address of accounts[1].address
 // Example usage
