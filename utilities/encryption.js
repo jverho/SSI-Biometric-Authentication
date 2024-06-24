@@ -1,14 +1,30 @@
 const crypto = require('crypto');
+const fs = require("fs");
 
-// Function to generate a random string
+// Generate an RSA key pair (only once, and store them in respective files)
+const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    publicKeyEncoding: {
+        type: 'spki',
+        format: 'pem'
+    },
+    privateKeyEncoding: {
+        type: 'pkcs8',
+        format: 'pem'
+    }
+});
+
+const PUBLIC_KEY = fs.readFileSync("utilities/rsa_public_key.pem");
+const PRIVATE_KEY = fs.readFileSync("utilities/rsa_private_key.pem");
+
+
 function generateRandomString(length) {
     return crypto.randomBytes(length).toString('hex');
 }
 
-// Function to generate a symmetric key as a string
+// Function to generate a symmetric key
 function generateSymmetricKey() {
-    const secretKey = crypto.randomBytes(32).toString('hex'); // 256-bit key in hex string format
-    return secretKey;
+    return crypto.randomBytes(32).toString('hex'); // 256-bit key in hex string format
 }
 
 // Function to encrypt data
@@ -39,6 +55,33 @@ function splitString(str) {
     return [part1, part2];
 }
 
+// Function to encrypt a symmetric key with the public key
+function encryptSymmetricKeyWithPublicKey(symmetricKey) {
+    const buffer = Buffer.from(symmetricKey, 'hex');
+    const encryptedKey = crypto.publicEncrypt(
+        {
+            key: PUBLIC_KEY,
+            padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+            oaepHash: 'sha256'
+        },
+        buffer
+    );
+    return encryptedKey.toString('base64');
+}
+
+// Function to decrypt a symmetric key with the private key
+function decryptSymmetricKeyWithPrivateKey(encryptedKey) {
+    const buffer = Buffer.from(encryptedKey, 'base64');
+    const decryptedKey = crypto.privateDecrypt(
+        {
+            key: PRIVATE_KEY,
+            padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+            oaepHash: 'sha256'
+        },
+        buffer
+    );
+    return decryptedKey.toString('hex');
+}
 
 module.exports = {
     generateRandomString,
@@ -46,4 +89,6 @@ module.exports = {
     encrypt,
     decrypt,
     splitString,
+    encryptSymmetricKeyWithPublicKey,
+    decryptSymmetricKeyWithPrivateKey
 };

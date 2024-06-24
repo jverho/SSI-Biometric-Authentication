@@ -4,7 +4,7 @@ const contractABI = require('../artifacts/contracts/CredentialRegistry.sol/Crede
 const contractAddress = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0'; // Replace with actual deployed address
 const CredentialRegistry = new web3.eth.Contract(contractABI, contractAddress);
 const { matchFingerprints } = require('./matcher'); // Import the matching function
-const { decrypt } = require('./encryption'); // Import the matching function
+const { decrypt, decryptSymmetricKeyWithPrivateKey } = require('./encryption');
 
 async function startListener() {
     try {
@@ -22,12 +22,20 @@ async function startListener() {
 
             const { user, _credId, submittedInfo, storedInfo, localInfo, key } = event.returnValues;
 
-            const combinedInfo = localInfo+storedInfo;
+            console.log("Encrypted Key (Raw):", key);
+            console.log("Encrypted Key Type:",  key.length);
+            console.log("Using Private Key for Decryption");
 
-            const decryptedCombinedInfo = decrypt(combinedInfo, key);
+            const decryptedKey = decryptSymmetricKeyWithPrivateKey(key);
+            console.log("Decrypted Symmetric Key:", decryptedKey);
+
+            const combinedInfo = localInfo + storedInfo;
+
+            const decryptedCombinedInfo = decrypt(combinedInfo, decryptedKey);
+            const decryptedSubmittedInfo = decrypt(submittedInfo, decryptedKey);
 
             // Parse the JSON strings into JavaScript objects
-            const submittedFingerprint = JSON.parse(submittedInfo);
+            const submittedFingerprint = JSON.parse(decryptedSubmittedInfo);
             const storedFingerprint = JSON.parse(decryptedCombinedInfo);
 
             // Perform the matching off-chain
