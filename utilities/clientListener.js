@@ -1,5 +1,4 @@
 const Web3 = require('web3');
-const {ethers} = require("hardhat");
 const web3 = new Web3('ws://127.0.0.1:8545'); // Use the same WebSocket provider
 const contractABI = require('../artifacts/contracts/CredentialRegistry.sol/Credentials.json').abi;
 const contractAddress = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0'; // Replace with actual deployed address
@@ -25,8 +24,9 @@ async function listenForCredentials(userAddress) {
         console.log(`Credential Hash: ${credHash}`);
         console.log(`Signature: ${JSON.stringify(sig)}`);
         console.log(`Signature: ${typeof sig.signature}`);
-        // here credential could be saved to a JSON file and used in another file to verify the credential
+        // credential is received by the client device and could be given to verifier
 
+        // verifier verifies the credential
         verifySignature(credHash, sig.signature, issuer);
     });
     console.log("Client Receiver started and waiting for events...");

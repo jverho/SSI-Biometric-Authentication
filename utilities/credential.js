@@ -1,7 +1,5 @@
 // var Web3 = require('web3');
 
-var crypto = require('crypto');
-var util = require('ethereumjs-util');
 const {web3} = require("hardhat");
 
 async function generateCredential(holderInfo, holderAccount, issuerAccount, issuerPrivateKey, epoch) {
@@ -10,7 +8,7 @@ async function generateCredential(holderInfo, holderAccount, issuerAccount, issu
     // holder info should be different to make sure hash is different for each credential
     let credentialID = web3.utils.sha3(issuerAccount + now + holderInfo); 
 
-    // Create the credential. Whatever the id repo query responded with is now the claim.
+    // create the credential
     var credential = {
         "id": credentialID, 
         "holder": holderAccount,
@@ -20,7 +18,7 @@ async function generateCredential(holderInfo, holderAccount, issuerAccount, issu
         "claim": holderInfo, 
     };
 
-    // the previous did not work, replaced with using web3 utilities sha and sign 
+    // create the has and signature, convert signature to string for storage
     let credentialHash = web3.utils.sha3(JSON.stringify(credential));
     let sig = await web3.eth.accounts.sign(credentialHash, issuerPrivateKey);
     let signature = JSON.stringify(sig);
@@ -41,7 +39,6 @@ async function verifySignature(credHash, signature, expectedIssuerAddress) {
     } else {
         console.log('Signature is invalid or does not match the expected issuer address.');
     }
-
 }
 
 

@@ -21,10 +21,4 @@ contract Authentication {
         return keccak256(abi.encodePacked(wholeInfo)) == keccak256(abi.encodePacked(_submittedInfo));
     }
 
-    // probably not needed here instead in CredentialRegistry contract
-/*
-    function presentCredential(string memory _credId) public view returns (string memory, string memory, string memory, string memory) {
-        return credentials.getCredential(_credId);
-    }
-    */
 }

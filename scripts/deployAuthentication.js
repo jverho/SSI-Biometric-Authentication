@@ -2,9 +2,7 @@ const { ethers, web3} = require("hardhat");
 const fs = require('fs');
 const path = require("path");
 const { generateCredential } = require('../utilities/credential');
-const { generateSymmetricKey, encrypt, splitString, encryptSymmetricKeyWithPublicKey,
-    decryptSymmetricKeyWithPrivateKey
-} = require('../utilities/encryption');
+const { generateSymmetricKey, encrypt, splitString, encryptSymmetricKeyWithPublicKey} = require('../utilities/encryption');
 
 async function main() {
     const accounts = await ethers.getSigners();
@@ -41,13 +39,6 @@ async function main() {
     const [localFingerprintEncrypted, submittedFingerprintEncrypted] = splitString(fingerprintEncrypted);
 
     const encryptedSecretKey = encryptSymmetricKeyWithPublicKey(secretKey);
-
-    const decryptedSecretKey = decryptSymmetricKeyWithPrivateKey(encryptedSecretKey);
-
-    //console.log("Private key:", PRIVATE_KEY);
-    console.log("Encrypted Symmetric Key:", encryptedSecretKey.length);
-    console.log("Symmetric Key (before encryption):", secretKey);
-    console.log("Symmetric Key (after decryption):", decryptedSecretKey);
 
     const tx = await identityReg.connect(user).register(userAddress, yourDID, submittedFingerprintEncrypted);
     await tx.wait();
