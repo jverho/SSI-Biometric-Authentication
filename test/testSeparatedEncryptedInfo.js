@@ -40,8 +40,6 @@ describe("DID Registry", function() {
     let issuerRegistryInstance;
     let didRegistryInstance;
     let credRegistryInstance;
-    let subAccInstance;
-    let accInstance;
     let authenticatorInstance;
 
     let additionalInfo;
@@ -94,33 +92,6 @@ describe("DID Registry", function() {
                 assert.equal(balance, 0, "check balance of the contract");
             });
         });
-
-
-        it('Deploying and generating bitmap', async () => {
-            subAccInstance = await SubAcc.new(issuerRegistryInstance.address /*, accInstance.address*/);
-            await web3.eth.getBalance(subAccInstance.address).then((balance) => {
-                assert.equal(balance, 0, "check balance of the contract");
-            });
-
-            // calculate how many hash function needed and update in contract
-            await initBitmap(subAccInstance, capacity);
-
-            // clean up from previous tests
-            emptyProducts();
-            emptyStaticAccData();
-        });
-
-        it('Deploying and generating global accumulator', async () => {
-            let [n, g] = gen();
-            // when adding bytes to contract, need to concat with "0x"
-            let nHex = "0x" + bigInt(n).toString(16); // convert back to bigInt with bigInt(nHex.slice(2), 16)
-            let gHex = "0x" + bigInt(g).toString(16);
-
-            accInstance = await Acc.new(issuerRegistryInstance.address, subAccInstance.address, gHex, nHex);
-            await web3.eth.getBalance(accInstance.address).then((balance) => {
-                assert.equal(balance, 0, "check balance of the contract");
-            });
-        });
     });
 
     describe("Add issuer to the registry", function () {
@@ -131,14 +102,14 @@ describe("DID Registry", function() {
 
     describe("Identity Register", function () {
         it('Registering the identity with contract, 1/2 saved locally', async () => {
-            let now = new Date();
+            console.time('Register DID time');
             let method = "example"; // The DID method you are using
             let uniqueIdentifier = web3.utils.sha3(issuer + Date.now()); // create a unique identifier
             let ubaasDID = `did:${method}:${uniqueIdentifier}`; // put the DID together
 
             const secretKey = crypto.randomBytes(32); // 256-bit key
 
-            additionalInfo = generateRandomString(16);
+            additionalInfo = generateRandomString(32);
 
             encryptedInfo = encrypt(additionalInfo, secretKey);
             console.log("Additional info:", additionalInfo);
@@ -152,24 +123,29 @@ describe("DID Registry", function() {
                 assert.exists(result, "check if did was generated");
             });
             console.log("local info:", localAdditionalInfo);
+            console.timeEnd('Register DID time');
         });
     });
 
     describe("Authentication", function () {
         it('Authenticate user with valid additional info', async () => {
+            console.time('Authentication Success Time');
             let isAuthenticated = await authenticatorInstance.authenticateSeparated(holder, encryptedInfo, localAdditionalInfo);
             assert.isTrue(isAuthenticated, "User should be authenticated with valid additional info");
+            console.timeEnd('Authentication Success Time');
         });
 
         it('Fail to authenticate user with invalid additional info', async () => {
+            console.time('Authentication Fail Time');
             let isAuthenticated = await authenticatorInstance.authenticateSeparated(holder, "wrongInfo", localAdditionalInfo);
             assert.isFalse(isAuthenticated, "User should not be authenticated with invalid additional info");
+            console.timeEnd('Authentication Fail Time');
         });
     });
 
     describe("Present Credential", function() {
         it('Present a valid credential for an authenticated user, separated Info', async () => {
-
+            console.time('Present Credential Time');
             // Generate a credential
             const holderInfo = "Some credential information"; // Adjust this to match your use case
             const epoch = Math.floor(Date.now() / 1000); // Current epoch time
@@ -181,7 +157,7 @@ describe("DID Registry", function() {
             console.log("signature:", signature);
 
             // Add the credential to the registry
-            await credRegistryInstance.addCredential(credential.id, credential.issuer, credential.holder, credentialHash, signature, 3600, epoch);
+            await credRegistryInstance.addCredential(credential.id, credential.issuer, credential.holder, credentialHash, signature);
 
             console.log("credential:", credential);
             console.log("credentialHash:", credentialHash)
@@ -191,7 +167,7 @@ describe("DID Registry", function() {
             const presentedCredential = await credRegistryInstance.presentCredentialSeparated(credential.id, encryptedInfo, localAdditionalInfo, { from: holder });
             console.log(presentedCredential);
             assert.equal(presentedCredential[0], credential.issuer, "Presented credential should match the generated credential");
-
+            console.timeEnd('Present Credential Time');
         });
     });
 

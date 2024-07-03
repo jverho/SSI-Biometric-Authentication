@@ -28,7 +28,7 @@ contract Credentials {
     mapping (string => Credential) private credential; 
 
     // do we need to keep validity variable? 
-    function addCredential(string memory _id, string memory _issuer, string memory _holder, string memory _credHash, string memory _signature, uint256 _validity, uint256 _epoch) public {
+    function addCredential(string memory _id, string memory _issuer, string memory _holder, string memory _credHash, string memory _signature) public {
         require (credential[_id].uploaded == false, "credential already exists");
         credential[_id].id = _id;
         credential[_id].issuer = _issuer; 
@@ -54,14 +54,9 @@ contract Credentials {
     }
 
     function handleAuthenticationResult(address _id, string memory _credId, bool _result) public {
-        // maybe add later for security
-        // require(msg.sender == address(this), "Unauthorized");
-
         if (_result) {
             // Logic to return the credential to the user
             emit CredentialIssued(_id, credential[_credId].issuer , credential[_credId].holder, credential[_credId].credHash, credential[_credId].signature);
         }
     }
-
-
 }
