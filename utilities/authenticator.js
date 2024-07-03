@@ -19,15 +19,11 @@ async function startListener() {
                 console.error(error);
                 return;
             }
+            console.time("Authenticator Time:")
 
             const { user, _credId, submittedInfo, storedInfo, localInfo, key } = event.returnValues;
 
-            console.log("Encrypted Key (Raw):", key);
-            console.log("Encrypted Key Type:",  key.length);
-            console.log("Using Private Key for Decryption");
-
             const decryptedKey = decryptSymmetricKeyWithPrivateKey(key);
-            console.log("Decrypted Symmetric Key:", decryptedKey);
 
             const combinedInfo = localInfo + storedInfo;
 
@@ -40,18 +36,19 @@ async function startListener() {
 
             // Perform the matching off-chain
             const success = matchFingerprints(storedFingerprint, submittedFingerprint);
-            console.log("Match Result:", success);
 
             // Send the authentication result back to the contract
             CredentialRegistry.methods.handleAuthenticationResult(user, _credId, success)
                 .send({ from: credentialRegistryAccount })
                 .on('receipt', function(receipt) {
-                    console.log('Authentication result sent:', receipt);
+                    //console.log('Authentication result sent:', receipt);
+                    console.timeEnd("Authenticator Time:")
+                    console.log('Gas Usage handleAuthenticationResult:', receipt.gasUsed.toString());
                 })
                 .on('error', console.error);
         });
 
-        console.log('Listener started, waiting for events...');
+        console.log('Authenticator started, waiting for events...');
     } catch (error) {
         console.error('Error starting listener:', error);
     }

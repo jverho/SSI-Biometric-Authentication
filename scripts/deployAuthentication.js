@@ -56,9 +56,7 @@ async function main() {
         credential.issuer,
         credential.holder,
         credentialHash,
-        sig,
-        3600,
-        epoch
+        sig
     );
     await addCredentialTx.wait();
 
@@ -68,8 +66,13 @@ async function main() {
     const fingerprintAuthEncrypted = encrypt(fingerprintAuthentication, secretKey);
 
     const txRequestAuth = await credentialReg.connect(user).requestCredential(userAddress, credential.id, fingerprintAuthEncrypted, localFingerprintEncrypted, encryptedSecretKey);
-    await txRequestAuth.wait();
+    const receipt = await ethers.provider.waitForTransaction(txRequestAuth.hash);
+    const gasUsed = receipt.gasUsed;
+    const gasPrice = await web3.eth.getGasPrice();
+    const gasCostETH = web3.utils.fromWei((gasUsed * gasPrice).toString(), 'ether');
     console.log('Authentication requested for user:', userAddress);
+    console.log(`Request Credential Authentication Gas Used: ${gasUsed.toString()}`);
+    console.log(`Gas Cost in ETH: ${gasCostETH}`);
 }
 
 main().catch((error) => {
