@@ -1,16 +1,7 @@
-var bigInt = require("big-integer");
-
 const { web3, assert, artifacts } = require("hardhat");
 const { generateCredential } = require("../utilities/credential.js");
-const { gen, hashToPrime } = require("../utilities/accumulator.js");
-const { initBitmap, addToBitmap, getBitmapData, getStaticAccData, checkInclusionBitmap, checkInclusionGlobal } = require("../utilities/bitmap.js");
-const { storeEpochPrimes } = require("../utilities/epoch.js");
-const { emptyProducts, emptyStaticAccData } = require("../utilities/product");
-const { generateRandomString, encrypt, decrypt } = require('../utilities/encryption');
 
-const { revoke, verify } = require("../revocation/revocation");
-const {consoleLogToString} = require("hardhat/internal/hardhat-network/stack-traces/consoleLogger");
-const crypto = require('crypto');
+const { generateRandomString, encrypt, decrypt } = require('../utilities/encryption');
 
 // using the following approach for testing:
 // https://hardhat.org/hardhat-runner/docs/other-guides/truffle-testing
@@ -19,8 +10,6 @@ const DID = artifacts.require("DID");
 const Cred = artifacts.require("Credentials");
 const Admin = artifacts.require("AdminAccounts");
 const Issuer = artifacts.require("IssuerRegistry");
-const SubAcc = artifacts.require("SubAccumulator");
-const Acc = artifacts.require("Accumulator");
 const Auth = artifacts.require("Authentication");
 
 
@@ -32,16 +21,11 @@ describe("DID Registry", function() {
     let issuer_;
     let issuer_Pri;
 
-    // bitmap capacity
-    let capacity = 30; // up to uin256 max elements
-
     // contract instances
     let adminRegistryInstance;
     let issuerRegistryInstance;
     let didRegistryInstance;
     let credRegistryInstance;
-    let subAccInstance;
-    let accInstance;
     let authenticatorInstance;
 
     let additionalInfo;
@@ -88,35 +72,8 @@ describe("DID Registry", function() {
         });
 
         it('Deploying the Credential Registry contract', async () => {
-            credRegistryInstance = await Cred.new(authenticatorInstance.address);
+            credRegistryInstance = await Cred.new(authenticatorInstance.address, didRegistryInstance.address);
             await web3.eth.getBalance(credRegistryInstance.address).then((balance) => {
-                assert.equal(balance, 0, "check balance of the contract");
-            });
-        });
-
-
-        it('Deploying and generating bitmap', async () => {
-            subAccInstance = await SubAcc.new(issuerRegistryInstance.address /*, accInstance.address*/);
-            await web3.eth.getBalance(subAccInstance.address).then((balance) => {
-                assert.equal(balance, 0, "check balance of the contract");
-            });
-
-            // calculate how many hash function needed and update in contract
-            await initBitmap(subAccInstance, capacity);
-
-            // clean up from previous tests
-            emptyProducts();
-            emptyStaticAccData();
-        });
-
-        it('Deploying and generating global accumulator', async () => {
-            let [n, g] = gen();
-            // when adding bytes to contract, need to concat with "0x"
-            let nHex = "0x" + bigInt(n).toString(16); // convert back to bigInt with bigInt(nHex.slice(2), 16)
-            let gHex = "0x" + bigInt(g).toString(16);
-
-            accInstance = await Acc.new(issuerRegistryInstance.address, subAccInstance.address, gHex, nHex);
-            await web3.eth.getBalance(accInstance.address).then((balance) => {
                 assert.equal(balance, 0, "check balance of the contract");
             });
         });
@@ -166,12 +123,10 @@ describe("DID Registry", function() {
 
             // Generate a credential
             const holderInfo = "Some credential information"; // Adjust this to match your use case
-            const epoch = Math.floor(Date.now() / 1000); // Current epoch time
-            const issuerPrivateKey = web3.eth.accounts.create().privateKey; // Generate a private key for the issuer
-            const [credential, credentialHash, signature] = await generateCredential(holderInfo, holder, issuer, "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC", epoch);
+            const [credential, credentialHash, signature] = await generateCredential(holderInfo, holder, issuer, "59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d");
 
             // Add the credential to the registry
-            await credRegistryInstance.addCredential(credential.id, credential.issuer, credential.holder, credentialHash, signature, 3600, epoch);
+            await credRegistryInstance.addCredential(credential.id, credential.issuer, credential.holder, credentialHash, signature);
 
             const presentedCredential = await credRegistryInstance.presentCredentialSeparated(credential.id, additionalInfo, localAdditionalInfo, { from: holder });
             console.log(presentedCredential);

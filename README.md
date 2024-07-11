@@ -8,11 +8,11 @@ First, we need to compile and deploy smart contracts to the testnet. To do this,
 
 To deploy, start the hardhat node with `npx hardhat node`.  
 
-Open another terminal window and deploy the contracts using `npx hardhat run --network localhost scripts/deploy.js` command.  
+Open another terminal window and deploy the contracts using `npx hardhat run --network localhost scripts/deployContracts.js` command.  
 
 Once the contracts deployed you can see the contract address in the node terminal (e.g., `0x5fbdb2315678afecb367f032d93f642f64180aa3`). 
 
-Since we are deploying few contracts, each one of them will have different address. Right now the `deploy.js` file contains all the deployment scripts that will be needed, but part of it is commented out so the only contract that is being deployed right now is DID Registry. 
+Since we are deploying few contracts, each one of them will have different address. Right now the `deployContracts.js` file contains all the deployment scripts that will be needed, but part of it is commented out so the only contract that is being deployed right now is DID Registry. 
 
 Now we can start the frontend app. To do this call the `npm start` from the frontend directory. The main logic is in `/scr/App.js` file and contains a simple app that interacts with deployed DID registry.  
 
@@ -27,7 +27,7 @@ npx hardhat help
 npx hardhat test
 GAS_REPORT=true npx hardhat test
 npx hardhat node
-npx hardhat run scripts/deploy.js
+npx hardhat run scripts/deployContracts.js
 ```
 
 # References 

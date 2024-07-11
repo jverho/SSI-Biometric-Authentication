@@ -5,8 +5,6 @@
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 // global scope, and execute the script.
 const { ethers } = require("hardhat");
-// const { gen } = require("../utilities/accumulator.js");
-// const { initBitmap } = require("../utilities/bitmap.js");
 const fs = require('fs');
 const path = require('path');
 

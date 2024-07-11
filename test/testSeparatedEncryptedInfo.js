@@ -1,15 +1,8 @@
-var bigInt = require("big-integer");
-
 const { web3, assert, artifacts } = require("hardhat");
 const { generateCredential } = require("../utilities/credential.js");
-const { gen, hashToPrime } = require("../utilities/accumulator.js");
-const { initBitmap, addToBitmap, getBitmapData, getStaticAccData, checkInclusionBitmap, checkInclusionGlobal } = require("../utilities/bitmap.js");
-const { storeEpochPrimes } = require("../utilities/epoch.js");
-const { emptyProducts, emptyStaticAccData } = require("../utilities/product");
+
 const { generateRandomString, encrypt, decrypt } = require('../utilities/encryption');
 
-const { revoke, verify } = require("../revocation/revocation");
-const {consoleLogToString} = require("hardhat/internal/hardhat-network/stack-traces/consoleLogger");
 const crypto = require('crypto');
 
 // using the following approach for testing:
@@ -19,8 +12,6 @@ const DID = artifacts.require("DID");
 const Cred = artifacts.require("Credentials");
 const Admin = artifacts.require("AdminAccounts");
 const Issuer = artifacts.require("IssuerRegistry");
-const SubAcc = artifacts.require("SubAccumulator");
-const Acc = artifacts.require("Accumulator");
 const Auth = artifacts.require("Authentication");
 
 
@@ -31,9 +22,6 @@ describe("DID Registry", function() {
 
     let issuer_;
     let issuer_Pri;
-
-    // bitmap capacity
-    let capacity = 30; // up to uin256 max elements
 
     // contract instances
     let adminRegistryInstance;
@@ -148,9 +136,7 @@ describe("DID Registry", function() {
             console.time('Present Credential Time');
             // Generate a credential
             const holderInfo = "Some credential information"; // Adjust this to match your use case
-            const epoch = Math.floor(Date.now() / 1000); // Current epoch time
-            const issuerPrivateKey = web3.eth.accounts.create().privateKey; // Generate a private key for the issuer
-            const [credential, credentialHash, signature] = await generateCredential(holderInfo, holder, issuer, "59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d", epoch);
+            const [credential, credentialHash, signature] = await generateCredential(holderInfo, holder, issuer, "59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d");
 
             console.log("credential:", credential);
             console.log("credentialHash:", credentialHash)

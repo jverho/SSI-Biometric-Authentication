@@ -2,7 +2,7 @@
 
 const {web3} = require("hardhat");
 
-async function generateCredential(holderInfo, holderAccount, issuerAccount, issuerPrivateKey, epoch) {
+async function generateCredential(holderInfo, holderAccount, issuerAccount, issuerPrivateKey) {
 
     let now = new Date(); 
     // holder info should be different to make sure hash is different for each credential
@@ -14,7 +14,6 @@ async function generateCredential(holderInfo, holderAccount, issuerAccount, issu
         "holder": holderAccount,
         "issuer": issuerAccount, 
         "created": now.toLocaleDateString(),
-        "epoch": epoch, 
         "claim": holderInfo, 
     };
 

@@ -54,8 +54,7 @@ async function main() {
     const credentialReg = CredentialRegistry.attach(credentialRegAddress);
 
     const holderInfo = { some: "info" };
-    const epoch = Math.floor(Date.now() / 1000);
-    const [credential, credentialHash, sig] = await generateCredential(holderInfo, userAddress, issuerAddress, issuerPrivateKey, epoch);
+    const [credential, credentialHash, sig] = await generateCredential(holderInfo, userAddress, issuerAddress, issuerPrivateKey);
 
     const addCredentialTx = await credentialReg.connect(issuer).addCredential(
         credential.id,
