@@ -31,7 +31,7 @@ async function main() {
 
     const yourDID = "did:example:123456";
 
-    const fingerprint1Path = path.join(__dirname, '..', 'biometrics', 'fingerprint1.json');
+    const fingerprint1Path = path.join(__dirname, '..', 'biometrics', 'fingerprint30Registration.json');
     const fingerprintRegistration = JSON.stringify(JSON.parse(fs.readFileSync(fingerprint1Path)));
 
     const secretKey = generateSymmetricKey();
@@ -40,8 +40,14 @@ async function main() {
 
     const encryptedSecretKey = encryptSymmetricKeyWithPublicKey(secretKey);
 
+    const gasPrice = await web3.eth.getGasPrice();
+    let receipt, gasUsed, gasCostETH;
     const tx = await identityReg.connect(user).register(userAddress, yourDID, submittedFingerprintEncrypted);
-    await tx.wait();
+    receipt = await ethers.provider.waitForTransaction(tx.hash);
+    gasUsed = receipt.gasUsed;
+    gasCostETH = web3.utils.fromWei((gasUsed * gasPrice).toString(), 'ether');
+    console.log(`Registering of DID Gas Usage: ${gasUsed.toString()}`);
+    console.log(`Registering of DID Gas Cost in ETH: ${gasCostETH}`);
 
     const credentialRegAddress = addresses.credentialReg;
     const CredentialRegistry = await ethers.getContractFactory('Credentials');
@@ -58,18 +64,22 @@ async function main() {
         credentialHash,
         sig
     );
-    await addCredentialTx.wait();
+    receipt = await ethers.provider.waitForTransaction(addCredentialTx.hash);
+    gasUsed = receipt.gasUsed;
+    gasCostETH = web3.utils.fromWei((gasUsed * gasPrice).toString(), 'ether');
+    console.log(`Adding Credential Gas Usage: ${gasUsed.toString()}`);
+    console.log(`Adding Credential Gas Cost in ETH: ${gasCostETH}`);
 
-    const fingerprint2Path = path.join(__dirname, '..', 'biometrics', 'fingerprint2.json');
+    const fingerprint2Path = path.join(__dirname, '..', 'biometrics', 'fingerprint30Authentication.json');
     const fingerprintAuthentication = JSON.stringify(JSON.parse(fs.readFileSync(fingerprint2Path)));
 
     const fingerprintAuthEncrypted = encrypt(fingerprintAuthentication, secretKey);
 
+    console.log(Date.now());
     const txRequestAuth = await credentialReg.connect(user).requestCredential(userAddress, credential.id, fingerprintAuthEncrypted, localFingerprintEncrypted, encryptedSecretKey);
-    const receipt = await ethers.provider.waitForTransaction(txRequestAuth.hash);
-    const gasUsed = receipt.gasUsed;
-    const gasPrice = await web3.eth.getGasPrice();
-    const gasCostETH = web3.utils.fromWei((gasUsed * gasPrice).toString(), 'ether');
+    receipt = await ethers.provider.waitForTransaction(txRequestAuth.hash);
+    gasUsed = receipt.gasUsed;
+    gasCostETH = web3.utils.fromWei((gasUsed * gasPrice).toString(), 'ether');
     console.log('Authentication requested for user:', userAddress);
     console.log(`Request Credential Authentication Gas Used: ${gasUsed.toString()}`);
     console.log(`Gas Cost in ETH: ${gasCostETH}`);

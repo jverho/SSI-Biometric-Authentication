@@ -17,6 +17,7 @@ async function listenForCredentials(userAddress) {
         }
 
         const { user, issuer, holder, credHash, signature } = event.returnValues;
+        console.log(Date.now());
         let sig = JSON.parse(signature);
         console.log(`Credential for ${user}:`);
         console.log(`Issuer: ${issuer}`);

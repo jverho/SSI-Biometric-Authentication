@@ -19,6 +19,7 @@ async function startListener() {
                 console.error(error);
                 return;
             }
+            const gasPrice = await web3.eth.getGasPrice();
             console.time("Authenticator Time:")
 
             const { user, _credId, submittedInfo, storedInfo, localInfo, key } = event.returnValues;
@@ -43,7 +44,11 @@ async function startListener() {
                 .on('receipt', function(receipt) {
                     //console.log('Authentication result sent:', receipt);
                     console.timeEnd("Authenticator Time:")
-                    console.log('Gas Usage handleAuthenticationResult:', receipt.gasUsed.toString());
+                    console.log("Matching Result:", success);
+                    const gasUsed = receipt.gasUsed;
+                    const gasCostETH = web3.utils.fromWei((gasUsed * gasPrice).toString(), 'ether');
+                    console.log('Gas Usage handleAuthenticationResult:', gasUsed.toString());
+                    console.log(`Gas Cost in ETH: ${gasCostETH}`);
                 })
                 .on('error', console.error);
         });
