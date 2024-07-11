@@ -1,14 +1,3 @@
-const fs = require('fs');
-const path = require('path');
-
-// File paths
-const fingerprint1Path = path.join(__dirname, '..', 'biometrics', 'fingerprint1.json');
-const fingerprint2Path = path.join(__dirname, '..', 'biometrics', 'fingerprint2.json');
-
-// Read JSON files
-const fingerprint1 = JSON.parse(fs.readFileSync(fingerprint1Path));
-const fingerprint2 = JSON.parse(fs.readFileSync(fingerprint2Path));
-
 
 // Helper function to calculate Euclidean distance
 function euclideanDistance(point1, point2) {
