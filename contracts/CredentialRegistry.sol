@@ -8,7 +8,7 @@ contract Credentials {
     Authentication private authentication;
     DID private didRegistry;
 
-    event CredentialIssued(address indexed user, string issuer, string holder, string credHash, string signature);
+    event CredentialIssued(bool result, address indexed user, string issuer, string holder, string credHash, string signature);
     event AuthenticationRequest(address indexed user, string _credId, string submittedInfo, string storedInfo, string localInfo, string key);
 
     constructor(address _authentication, address _didRegistry) {
@@ -56,7 +56,10 @@ contract Credentials {
     function handleAuthenticationResult(address _id, string memory _credId, bool _result) public {
         if (_result) {
             // Logic to return the credential to the user
-            emit CredentialIssued(_id, credential[_credId].issuer , credential[_credId].holder, credential[_credId].credHash, credential[_credId].signature);
+            emit CredentialIssued(_result, _id, credential[_credId].issuer , credential[_credId].holder, credential[_credId].credHash, credential[_credId].signature);
+        }
+        else{
+            emit CredentialIssued(false, _id, "-" , "-", "-", "-");
         }
     }
 }

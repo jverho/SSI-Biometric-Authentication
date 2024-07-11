@@ -16,19 +16,23 @@ async function listenForCredentials(userAddress) {
             return;
         }
 
-        const { user, issuer, holder, credHash, signature } = event.returnValues;
+        const { result, user, issuer, holder, credHash, signature } = event.returnValues;
         console.log(Date.now());
-        let sig = JSON.parse(signature);
-        console.log(`Credential for ${user}:`);
-        console.log(`Issuer: ${issuer}`);
-        console.log(`Holder: ${holder}`);
-        console.log(`Credential Hash: ${credHash}`);
-        console.log(`Signature: ${JSON.stringify(sig)}`);
-        console.log(`Signature: ${typeof sig.signature}`);
-        // credential is received by the client device and could be given to verifier
+        if (result) {
+            let sig = JSON.parse(signature);
+            console.log(`Credential for ${user}:`);
+            console.log(`Issuer: ${issuer}`);
+            console.log(`Holder: ${holder}`);
+            console.log(`Credential Hash: ${credHash}`);
+            console.log(`Signature: ${JSON.stringify(sig)}`);
+            // credential is received by the client device and could be given to verifier
 
-        // verifier verifies the credential
-        verifySignature(credHash, sig.signature, issuer);
+            // verifier verifies the credential
+            verifySignature(credHash, sig.signature, issuer);
+        }
+        else{
+            console.log("Authentication did not work! Biometrics did not match!")
+        }
     });
     console.log("Client Receiver started and waiting for events...");
 }
