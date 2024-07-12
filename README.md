@@ -13,24 +13,25 @@ In a new thrid terminal window, the client listner node needs to be started usin
 
 Open another terminal window and deploy the contracts using `npx hardhat run --network localhost scripts/deployContracts.js` command.  
 
-Once the contracts deployed you can see the contract address in the node terminal (e.g., `0x5fbdb2315678afecb367f032d93f642f64180aa3`). 
+Once the contracts deployed you can see the contract address in the node terminal (e.g., `0x5FbDB2315678afecb367f032d93F642f64180aa3`). 
 
 In the same terminal the authencation process can be deployed with the command `npx hardhat run --network localhost scripts/deployAuthentication30.js` or `npx hardhat run --network localhost scripts/deployAuthentication80.js` respectively, depending on which biometric fingerprint information (30 or 80 minutiae points) should be used.
 
+Once the authentication deployment is complete you cann see the address for which the authentication was perfromed in the node terminal (e.g., `0x70997970C51812dc3A010C7d01b50e0d17dc79C8`).
+
+As soon as the authenticator has perfomed the matching of biometrics you can see the match result in the node terminal (e.g., `Matching Result for 0x70997970C51812dc3A010C7d01b50e0d17dc79C8: true`).
 
 # Hardhat Commands 
 
 ```shell
 npx hardhat help
 npx hardhat test
-GAS_REPORT=true npx hardhat test
 npx hardhat node
 npx hardhat run scripts/deployContracts.js
 ```
 
 # References 
-- [Hardhat Guides](https://hardhat.org/hardhat-runner/docs/guides/project-setup) to compile and deploy smart contracts.
-- [Hardhat Boilerplate Project](https://hardhat.org/tutorial/boilerplate-project) featuring smart contracts and frontend files structure. 
+- [Hardhat Guides](https://hardhat.org/hardhat-runner/docs/guides/project-setup) to compile and deploy smart contracts. 
 
 ## Code Base 
 - The original CredChain code based was developed by Yue Liu. It was update by Daria Schumm to the latest Solidity (^0.8.0) version, utilises new deployment and testing framework (Hardhat and Truffle). The code is changed to feature the functionalites enableing biometric authentication.
