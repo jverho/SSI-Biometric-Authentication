@@ -7,7 +7,7 @@ contract DID {
         address id;                             // ethereum address of identity owner 
         address owner;                          // original identity owner
 
-        string did;                             // issuer account address + time now ???
+        string did;                             // did method
 
         string additionalInfo;                  // field to store additional information for authentication
     }

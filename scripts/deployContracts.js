@@ -8,8 +8,6 @@ const { ethers } = require("hardhat");
 const fs = require('fs');
 const path = require('path');
 
-// var bigInt = require("big-integer");
-
 require("@nomiclabs/hardhat-web3");
 
 async function main() {
@@ -26,19 +24,19 @@ async function main() {
 	await authentication.deployed();
 	console.log("Authentication contract has been deployed to:", authentication.address);
 
-	// Credential registry contract to deploy
+	// Credential Registry contract to deploy
 	const CredentialRegistry = await ethers.getContractFactory('Credentials');
 	const credentialReg = await CredentialRegistry.deploy(authentication.address, identityReg.address);
 	await credentialReg.deployed();
 	console.log("Credentials Registry has been deployed to:", credentialReg.address);
 
-	// admin account registry
+	// Deploy Admin Account Registry
 	const AdminRegistry = await ethers.getContractFactory('AdminAccounts');
 	const adminReg = await AdminRegistry.deploy();
 	await adminReg.deployed();
 	console.log("Admins Registry has been deployed to:", adminReg.address);
 
-	// issuer registry
+	// Deploy Issuer Registry
 	const IssuerRegistry = await ethers.getContractFactory('IssuerRegistry');
 	const issuerReg = await IssuerRegistry.deploy(adminReg.address);
 	await issuerReg.deployed();

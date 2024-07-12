@@ -27,7 +27,7 @@ function generateSymmetricKey() {
     return crypto.randomBytes(32).toString('hex'); // 256-bit key in hex string format
 }
 
-// Function to encrypt data
+// Function to encrypt data with symmetric key
 function encrypt(data, secretKey) {
     const iv = crypto.randomBytes(16);
     const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(secretKey, 'hex'), iv);
@@ -36,7 +36,7 @@ function encrypt(data, secretKey) {
     return iv.toString('hex') + ':' + encrypted.toString('hex');
 }
 
-// Function to decrypt data
+// Function to decrypt data with symmetric key
 function decrypt(data, secretKey) {
     let parts = data.split(':');
     let iv = Buffer.from(parts.shift(), 'hex');

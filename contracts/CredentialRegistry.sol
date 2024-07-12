@@ -27,7 +27,6 @@ contract Credentials {
 
     mapping (string => Credential) private credential; 
 
-    // do we need to keep validity variable? 
     function addCredential(string memory _id, string memory _issuer, string memory _holder, string memory _credHash, string memory _signature) public {
         require (credential[_id].uploaded == false, "credential already exists");
         credential[_id].id = _id;
@@ -36,16 +35,6 @@ contract Credentials {
         credential[_id].credHash = _credHash;
         credential[_id].signature = _signature;
         credential[_id].uploaded = true; 
-    }
-
-    function presentCredential(string memory _credId, string memory _submittedInfo) public view returns (string memory, string memory, string memory, string memory) {
-        require(authentication.authenticate(msg.sender, _submittedInfo), "User is not authenticated");
-        return (credential[_credId].issuer, credential[_credId].holder, credential[_credId].credHash, credential[_credId].signature);
-    }
-
-    function presentCredentialSeparated(string memory _credId, string memory _submittedInfo, string memory _localInfo) public view returns (string memory, string memory, string memory, string memory) {
-        require(authentication.authenticateSeparated(msg.sender, _submittedInfo, _localInfo), "User is not authenticated");
-        return (credential[_credId].issuer, credential[_credId].holder, credential[_credId].credHash, credential[_credId].signature);
     }
 
     function requestCredential(address _id, string memory _credId, string memory _submittedInfo, string memory localInfo, string memory key) public {
@@ -61,5 +50,15 @@ contract Credentials {
         else{
             emit CredentialIssued(false, _id, "-" , "-", "-", "-");
         }
+    }
+
+    function presentCredential(string memory _credId, string memory _submittedInfo) public view returns (string memory, string memory, string memory, string memory) {
+        require(authentication.authenticate(msg.sender, _submittedInfo), "User is not authenticated");
+        return (credential[_credId].issuer, credential[_credId].holder, credential[_credId].credHash, credential[_credId].signature);
+    }
+
+    function presentCredentialSeparated(string memory _credId, string memory _submittedInfo, string memory _localInfo) public view returns (string memory, string memory, string memory, string memory) {
+        require(authentication.authenticateSeparated(msg.sender, _submittedInfo, _localInfo), "User is not authenticated");
+        return (credential[_credId].issuer, credential[_credId].holder, credential[_credId].credHash, credential[_credId].signature);
     }
 }

@@ -16,14 +16,17 @@ async function listenForCredentials(userAddress) {
             return;
         }
 
+        // getting the return values from the event
         const { result, user, issuer, holder, credHash, signature } = event.returnValues;
-        console.log(Date.now());
+        // console.log(Date.now());
+
+        // if the result is true receive the credential and verify it
         if (result) {
             let sig = JSON.parse(signature);
             console.log(`Credential for ${user}:`);
             console.log(`Issuer: ${issuer}`);
             console.log(`Holder: ${holder}`);
-            console.log(`Credential Hash: ${credHash}`);
+            //console.log(`Credential Hash: ${credHash}`);
             console.log(`Signature: ${JSON.stringify(sig)}`);
             // credential is received by the client device and could be given to verifier
 

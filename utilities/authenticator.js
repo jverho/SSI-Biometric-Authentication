@@ -20,14 +20,16 @@ async function startListener() {
                 return;
             }
             const gasPrice = await web3.eth.getGasPrice();
-            console.time("Authenticator Time:")
+            // console.time("Authenticator Time")
 
+            // getting the return values from the event
             const { user, _credId, submittedInfo, storedInfo, localInfo, key } = event.returnValues;
 
+            // decrypting the symmetric key
             const decryptedKey = decryptSymmetricKeyWithPrivateKey(key);
 
+            // putting the encrypted string back together and decrypting the encrypted information
             const combinedInfo = localInfo + storedInfo;
-
             const decryptedCombinedInfo = decrypt(combinedInfo, decryptedKey);
             const decryptedSubmittedInfo = decrypt(submittedInfo, decryptedKey);
 
@@ -36,19 +38,19 @@ async function startListener() {
             const storedFingerprint = JSON.parse(decryptedCombinedInfo);
 
             // Perform the matching off-chain
-            const success = matchFingerprints(storedFingerprint, submittedFingerprint);
+            const result = matchFingerprints(storedFingerprint, submittedFingerprint);
 
-            // Send the authentication result back to the contract
-            CredentialRegistry.methods.handleAuthenticationResult(user, _credId, success)
+            // Sending the authentication result back
+            CredentialRegistry.methods.handleAuthenticationResult(user, _credId, result)
                 .send({ from: credentialRegistryAccount })
                 .on('receipt', function(receipt) {
                     //console.log('Authentication result sent:', receipt);
-                    console.timeEnd("Authenticator Time:")
-                    console.log("Matching Result:", success);
+                    // console.timeEnd("Authenticator Time")
+                    console.log(`Matching Result for ${user}: ${result}`);
                     const gasUsed = receipt.gasUsed;
                     const gasCostETH = web3.utils.fromWei((gasUsed * gasPrice).toString(), 'ether');
-                    console.log('Gas Usage handleAuthenticationResult:', gasUsed.toString());
-                    console.log(`Gas Cost in ETH: ${gasCostETH}`);
+                    // console.log('Gas Usage handleAuthenticationResult:', gasUsed.toString());
+                    // console.log(`Gas Cost in ETH: ${gasCostETH}`);
                 })
                 .on('error', console.error);
         });

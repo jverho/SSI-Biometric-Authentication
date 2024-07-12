@@ -1,10 +1,9 @@
 
-// Helper function to calculate Euclidean distance
+// Helper function to calculate Euclidean distance between two points
 function euclideanDistance(point1, point2) {
     return Math.sqrt(Math.pow(point1.x - point2.x, 2) + Math.pow(point1.y - point2.y, 2));
 }
 
-// Basic matching function
 function matchFingerprints(stored, newFingerprint, threshold = 5) {
     let matches = 0;
 
@@ -23,7 +22,7 @@ function matchFingerprints(stored, newFingerprint, threshold = 5) {
         }
     }
 
-    // Define a threshold for a match (e.g., 70% of points should match)
+    // Define a threshold for a match (currently 70% of points have to match)
     const matchThreshold = 0.7 * stored.minutiae_points.length;
     return matches >= matchThreshold;
 }

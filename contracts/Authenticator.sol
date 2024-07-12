@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import "./DIDRegistry.sol";
 
+// Authenticator contract used for authentication with strings used for matching
+// This contract is not needed for the biometric authentication
 contract Authentication {
     DID private didRegistry;
 
