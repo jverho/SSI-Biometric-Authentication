@@ -21,6 +21,8 @@ Once the authentication deployment is complete you cann see the address for whic
 
 As soon as the authenticator has perfomed the matching of biometrics you can see the match result in the node terminal (e.g., `Matching Result for 0x70997970C51812dc3A010C7d01b50e0d17dc79C8: true`).
 
+The client listener received the authentication result which you can see in the node terminal.
+
 # Hardhat Commands 
 
 ```shell
@@ -34,4 +36,4 @@ npx hardhat run scripts/deployContracts.js
 - [Hardhat Guides](https://hardhat.org/hardhat-runner/docs/guides/project-setup) to compile and deploy smart contracts. 
 
 ## Code Base 
-- The original CredChain code based was developed by Yue Liu. It was update by Daria Schumm to the latest Solidity (^0.8.0) version, utilises new deployment and testing framework (Hardhat and Truffle). The code is changed to feature the functionalites enableing biometric authentication.
+- The original CredChain code based was developed by Yue Liu. It was updated by Daria Schumm to utilise new deployment and testing framework (Hardhat and Truffle). The code is changed to feature the functionalites enabling biometric authentication.
