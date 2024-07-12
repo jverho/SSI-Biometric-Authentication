@@ -3,7 +3,7 @@ pragma solidity ^0.8.9;
 
 contract DID {
     
-    struct DDO {                                // DID Document describing how to use DID, unique identifier for a relationship 
+    struct DDO {                                // DID Document
         address id;                             // ethereum address of identity owner 
         address owner;                          // original identity owner
 

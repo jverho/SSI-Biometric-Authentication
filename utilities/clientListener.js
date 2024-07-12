@@ -1,7 +1,7 @@
 const Web3 = require('web3');
-const web3 = new Web3('ws://127.0.0.1:8545'); // Use the same WebSocket provider
+const web3 = new Web3('ws://127.0.0.1:8545'); // Use IPv4 explicitly
 const contractABI = require('../artifacts/contracts/CredentialRegistry.sol/Credentials.json').abi;
-const contractAddress = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0'; // Replace with actual deployed address
+const contractAddress = '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0'; // Credential Registry address
 const Credentials = new web3.eth.Contract(contractABI, contractAddress);
 const { verifySignature } = require('./credential');
 
@@ -39,9 +39,8 @@ async function listenForCredentials(userAddress) {
     });
     console.log("Client Receiver started and waiting for events...");
 }
-// at the moment address of accounts[1].address
-// Example usage
-listenForCredentials('0x70997970C51812dc3A010C7d01b50e0d17dc79C8'); // Replace with actual user address
+
+listenForCredentials('0x70997970C51812dc3A010C7d01b50e0d17dc79C8'); // User address
 
 
 
