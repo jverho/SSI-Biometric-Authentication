@@ -2,18 +2,13 @@ var bigInt = require("big-integer");
 
 const { web3, assert, artifacts } = require("hardhat");
 const { generateCredential } = require("../utilities/credential.js");
-const { gen, hashToPrime } = require("../utilities/accumulator.js");
-const { initBitmap, addToBitmap, getBitmapData, getStaticAccData, checkInclusionBitmap, checkInclusionGlobal } = require("../utilities/bitmap.js");
-const { storeEpochPrimes } = require("../utilities/epoch.js");
-const { emptyProducts, emptyStaticAccData } = require("../utilities/product");
-const { generateRandomString, encrypt, decrypt } = require('../utilities/encryption');
+const { encrypt, decrypt, generateSymmetricKey} = require('../utilities/encryption');
 
-const { revoke, verify } = require("../revocation/revocation");
-const {consoleLogToString} = require("hardhat/internal/hardhat-network/stack-traces/consoleLogger");
-const crypto = require('crypto');
 const path = require("path");
 const fs = require("fs");
 const {matchFingerprints} = require("../utilities/matcher");
+const { spawn } = require('child_process');
+const {verifySignature} = require("../utilities/credential");
 
 // using the following approach for testing:
 // https://hardhat.org/hardhat-runner/docs/other-guides/truffle-testing
@@ -26,6 +21,7 @@ const SubAcc = artifacts.require("SubAccumulator");
 const Acc = artifacts.require("Accumulator");
 const Auth = artifacts.require("Authentication");
 
+const contractABI = require('../artifacts/contracts/CredentialRegistry.sol/Credentials.json').abi;
 
 describe("DID Registry", function() {
     let accounts;
@@ -55,6 +51,12 @@ describe("DID Registry", function() {
     let secretKey;
     let fingerprintRegistration;
     let fingerprintAuthentication;
+    let credential;
+    let credentialHash;
+    let sig;
+
+    let listenerProcess;
+    let clientProcess;
 
     before(async function () {
         accounts = await web3.eth.getAccounts();
@@ -64,6 +66,20 @@ describe("DID Registry", function() {
         issuer_ = web3.eth.accounts.create();
         issuer_Pri = issuer_.privateKey;
         issuer = issuer_.address;
+
+        // Start the listener process
+        listenerProcess = spawn('node', ['utilities/authenticator.js']);
+        listenerProcess.stdout.on('data', (data) => {
+            console.log(`Listener: ${data}`);
+        });
+        listenerProcess.stderr.on('data', (data) => {
+            console.error(`Listener error: ${data}`);
+        });
+    });
+
+    after(async function () {
+        listenerProcess.kill();
+
     });
 
     describe("Deployment", function () {
@@ -75,10 +91,12 @@ describe("DID Registry", function() {
         });
 
         it('Deploying the Issuers Registry contract', async () => {
+            console.time('Issuer Registry Deployment Time');
             issuerRegistryInstance = await Issuer.new(adminRegistryInstance.address);
             await web3.eth.getBalance(issuerRegistryInstance.address).then((balance) => {
                 assert.equal(balance, 0, "check balance of the contract");
             });
+            console.timeEnd('Issuer Registry Deployment Time');
         });
 
         it('Deploying the DID Registry contract', async () => {
@@ -100,33 +118,7 @@ describe("DID Registry", function() {
             await web3.eth.getBalance(credRegistryInstance.address).then((balance) => {
                 assert.equal(balance, 0, "check balance of the contract");
             });
-        });
-
-
-        it('Deploying and generating bitmap', async () => {
-            subAccInstance = await SubAcc.new(issuerRegistryInstance.address /*, accInstance.address*/);
-            await web3.eth.getBalance(subAccInstance.address).then((balance) => {
-                assert.equal(balance, 0, "check balance of the contract");
-            });
-
-            // calculate how many hash function needed and update in contract
-            await initBitmap(subAccInstance, capacity);
-
-            // clean up from previous tests
-            emptyProducts();
-            emptyStaticAccData();
-        });
-
-        it('Deploying and generating global accumulator', async () => {
-            let [n, g] = gen();
-            // when adding bytes to contract, need to concat with "0x"
-            let nHex = "0x" + bigInt(n).toString(16); // convert back to bigInt with bigInt(nHex.slice(2), 16)
-            let gHex = "0x" + bigInt(g).toString(16);
-
-            accInstance = await Acc.new(issuerRegistryInstance.address, subAccInstance.address, gHex, nHex);
-            await web3.eth.getBalance(accInstance.address).then((balance) => {
-                assert.equal(balance, 0, "check balance of the contract");
-            });
+            console.log(credRegistryInstance.address);
         });
     });
 
@@ -143,9 +135,9 @@ describe("DID Registry", function() {
             let uniqueIdentifier = web3.utils.sha3(issuer + Date.now()); // create a unique identifier
             let ubaasDID = `did:${method}:${uniqueIdentifier}`; // put the DID together
 
-            secretKey = crypto.randomBytes(32); // 256-bit key
+            secretKey = generateSymmetricKey();
 
-            const fingerprint1Path = path.join(__dirname, '..', 'biometrics', 'fingerprint1.json');
+            const fingerprint1Path = path.join(__dirname, '..', 'biometrics', 'fingerprint30Registration.json');
             fingerprintRegistration = JSON.stringify(JSON.parse(fs.readFileSync(fingerprint1Path)));
 
             encryptedInfo = encrypt(fingerprintRegistration, secretKey);
@@ -167,11 +159,10 @@ describe("DID Registry", function() {
         it('Matching fingerprints', async () => {
 
             // select matching fingerprint
-            const fingerprint2Path = path.join(__dirname, '..', 'biometrics', 'fingerprint2.json');
+            const fingerprint2Path = path.join(__dirname, '..', 'biometrics', 'fingerprint30Authentication.json');
             fingerprintAuthentication = JSON.parse(fs.readFileSync(fingerprint2Path));
 
             // concatenate the encrypted seperated fingerprint and decrypt it
-            // do I need to get the registeredAdditionalInfo from the DID to simulate it more realistically?
             const decryptedInfo = decrypt(localAdditionalInfo+registeredAdditionalInfo, secretKey);
             console.log("decrypted info:", decryptedInfo);
             let fingerprintConcatenated = JSON.parse(decryptedInfo);
@@ -184,11 +175,10 @@ describe("DID Registry", function() {
         it('Not matching fingerprints', async () => {
 
             // select the fingerprint that does not match
-            const fingerprint3Path = path.join(__dirname, '..', 'biometrics', 'fingerprint3.json');
+            const fingerprint3Path = path.join(__dirname, '..', 'biometrics', 'fingerprint30AuthenticationNotMatching.json');
             const fingerprintNonMatch = JSON.parse(fs.readFileSync(fingerprint3Path));
 
             // concatenate the encrypted seperated fingerprint and decrypt it
-            // do I need to het the registeredAdditionalInfo from the DID to simulate it more realistically?
             const decryptedInfo = decrypt(localAdditionalInfo+registeredAdditionalInfo, secretKey);
             let fingerprintConcatenated = JSON.parse(decryptedInfo);
 
@@ -198,4 +188,78 @@ describe("DID Registry", function() {
         });
     });
 
+    describe("Credential", function () {
+        it('Verifying a credential', async () => {
+            console.log("Issuer address:", issuerAddress);
+            console.log("Holder address:", holder);
+            console.log("Issuer private key:", issuerPrivateKey);
+            console.log("Checking private key leads to address", web3.eth.accounts.privateKeyToAccount(issuerPrivateKey).address);
+
+            const [credential, credentialHash, sig] = await generateCredential("some claim", holder, issuerAddress, issuerPrivateKey);
+
+            const recoveredAddress = web3.eth.accounts.recover(credentialHash, sig);
+
+            console.log("recovered address in test:", recoveredAddress);
+
+            await verifySignature(credentialHash, sig, issuerAddress);
+        });
+    });
+
+    describe("Listener Functionality Test", function () {
+        it('Listener should handle AuthenticationRequest event correctly', async () => {
+
+            const epoch = Math.floor(Date.now() / 1000); // Current timestamp as epoch
+            const holderInfo = { some: "info" }; // Replace with actual holder info
+            [credential, credentialHash, sig] = await generateCredential(holderInfo, holder, issuer, issuer_Pri, epoch);
+
+            await credRegistryInstance.addCredential(
+                credential.id,
+                credential.issuer,
+                credential.holder,
+                credentialHash,
+                sig,
+            );
+
+            // Use WebSocket provider for event subscription
+            const Web3 = require('web3');
+            const web3Ws = new Web3('ws://127.0.0.1:8545'); // Use the same WebSocket provider
+            const contractABI = require('../artifacts/contracts/CredentialRegistry.sol/Credentials.json').abi;
+            const contractAddress = credRegistryInstance.address;
+            const Credentials = new web3Ws.eth.Contract(contractABI, contractAddress);
+
+            console.log("Setting up event listener...");
+
+
+            // Return a promise that resolves when the event is caught
+            const eventPromise = new Promise((resolve, reject) => {
+                console.log("Setup Promise...")
+                Credentials.events.CredentialIssued({
+                    fromBlock: 'latest'
+                }, function (error, event) {
+                    if (error) {
+                        console.error("Event listener error:", error);
+                        reject(error);
+                        return;
+                    }
+
+                    console.log("Event: ", event);
+                    assert.equal(event.returnValues.user, holder, "Event user should match the holder");
+                    assert.equal(event.returnValues.issuer, credential.issuer, "Event issuer should match the credential issuer");
+                    assert.equal(event.returnValues.holder, credential.holder, "Event holder should match the credential holder");
+                    assert.equal(event.returnValues.credHash, credentialHash, "Event credential hash should match");
+                    assert.equal(event.returnValues.signature, sig.signature, "Event signature should match");
+                    resolve(event);
+                });
+            });
+
+            await credRegistryInstance.requestCredential(holder, credential.id, fingerprintRegistration, localAdditionalInfo, secretKey);
+
+            // Wait for the event to be caught or timeout
+            const timeoutPromise = new Promise(resolve => setTimeout(resolve, 20000, 'timeout'));
+
+            const result = await Promise.race([eventPromise, timeoutPromise]);
+
+            assert.notEqual(result, 'timeout', "Event listener timed out");
+        });
+    });
 });
