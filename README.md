@@ -1,4 +1,4 @@
-# SSI with Biometric Authentication
+# SSI system with Biometric Authentication
 
 The project consists of JavaScript files and smart contracts enabling biometric authentication in an SSI system.
 
